@@ -6,20 +6,16 @@ import puppeteer from 'puppeteer';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
 app.use(bodyParser.json());
 
-// Endpoint de test
 app.get('/', (req, res) => {
   res.send('✅ Skyward Flow scraper is running!');
 });
 
-// Endpoint de generare leaduri
 app.post('/genereaza', async (req, res) => {
   try {
     console.log('📩 Cerere nouă pentru generare leaduri primită!');
 
-    // Lansăm browserul
     const browser = await puppeteer.launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
@@ -27,12 +23,10 @@ app.post('/genereaza', async (req, res) => {
 
     const page = await browser.newPage();
 
-    // Accesăm pagina publică din Wix
     await page.goto('https://skywardflow.com/date-firma', {
       waitUntil: 'networkidle2',
     });
 
-    // Extragem datele
     const data = await page.evaluate(() => {
       return {
         firma: document.querySelector('#inputNumeFirma')?.value || '',
@@ -50,8 +44,6 @@ app.post('/genereaza', async (req, res) => {
 
     await browser.close();
 
-    // În acest punct, vom conecta la Wix CMS (pasul următor)
-
     res.status(200).json({
       message: '✅ Lead generat cu succes!',
       data,
@@ -62,7 +54,6 @@ app.post('/genereaza', async (req, res) => {
   }
 });
 
-// Pornim serverul
 app.listen(PORT, () => {
   console.log(`🚀 Server live pe portul ${PORT}`);
 });
