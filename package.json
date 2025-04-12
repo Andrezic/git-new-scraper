@@ -1,15 +1,18 @@
 {
-  "name": "new-scraper",
+  "name": "skyward-scraper",
   "version": "1.0.0",
+  "description": "Skyward Flow Scraper pentru generarea automată de lead-uri",
   "main": "proxy.js",
-  "engines": {
-    "node": "22.x"
-  },
+  "type": "module",
   "scripts": {
     "start": "node proxy.js"
   },
+  "engines": {
+    "node": "22.x"
+  },
   "dependencies": {
     "express": "^4.18.2",
-    "puppeteer": "21.11.0"
+    "puppeteer": "21.11.0",
+    "body-parser": "^1.20.2"
   }
 }
