@@ -1,52 +1,76 @@
+// proxy.js
 import express from 'express';
 import bodyParser from 'body-parser';
 import puppeteer from 'puppeteer';
-import 'dotenv/config';
 
 const app = express();
-const port = 3000;
+const PORT = process.env.PORT || 3000;
 
+// Middleware
 app.use(bodyParser.json());
 
-// Route principal
-app.post('/send-lead', async (req, res) => {
-  const leadData = req.body;
+// Endpoint de test să verificăm dacă serverul e live
+app.get('/', (req, res) => {
+  res.send('✅ Skyward Flow scraper is running!');
+});
 
-  console.log('📥 Lead primit de la scraper:', leadData);
-
+// Endpoint de generare leaduri (endpoint-ul nostru de scraping)
+app.post('/genereaza', async (req, res) => {
   try {
+    console.log('📩 Cerere nouă pentru generare leaduri primită!');
+
+    // Inițializare browser
     const browser = await puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
     const page = await browser.newPage();
 
-    // Accesează direct pagina Wix publică unde salvezi leadurile
-    await page.goto(process.env.WIX_FORM_URL, { waitUntil: 'networkidle2' });
+    // Accesăm pagina profilului tău public din Wix
+    await page.goto('https://skywardflow.com/date-firma', {
+      waitUntil: 'networkidle2',
+    });
 
-    // Completează formularul cu datele primite
-    await page.type('#clientNameText', leadData.numeClient || 'Nume test');
-    await page.type('#clientEmailText', leadData.emailClient || 'email@test.com');
-    await page.type('#clientRequestText', leadData.cerereClient || 'Cerere test');
-    await page.type('#dataText', new Date().toISOString());
+    // Extragere date din pagina publică
+    const data = await page.evaluate(() => {
+      const firma = document.querySelector('#inputNumeFirma')?.value || '';
+      const email = document.querySelector('#inputEmailFirma')?.value || '';
+      const telefon = document.querySelector('#inputTelefonFirma')?.value || '';
+      const website = document.querySelector('#inputWebsiteFirma')?.value || '';
+      const servicii = document.querySelector('#inputServicii')?.value || '';
+      const avantaje = document.querySelector('#inputAvantaje')?.value || '';
+      const preturi = document.querySelector('#inputPreturi')?.value || '';
+      const tipClienti = document.querySelector('#inputTipClienti')?.value || '';
 
-    // Trimite formularul
-    await Promise.all([
-      page.click('#submitButton'), // ✅ Asigură-te că ID-ul butonului este corect în site-ul tău!
-      page.waitForNavigation({ waitUntil: 'networkidle2' })
-    ]);
+      return {
+        firma,
+        email,
+        telefon,
+        website,
+        servicii,
+        avantaje,
+        preturi,
+        tipClienti,
+      };
+    });
+
+    console.log('📦 Date extrase:', data);
 
     await browser.close();
 
-    console.log('✅ Lead salvat cu succes în Wix!');
-    res.status(200).send({ success: true, message: 'Lead salvat cu succes în Wix!' });
+    // TODO: aici trimiți datele către API-ul Wix CMS (facem împreună la următorul pas)
+
+    res.status(200).json({
+      message: '✅ Lead generat cu succes!',
+      data,
+    });
   } catch (error) {
-    console.error('❌ Eroare la salvarea leadului în Wix:', error);
-    res.status(500).send({ success: false, message: 'Eroare la salvarea leadului în Wix.', error });
+    console.error('❌ Eroare la generare lead:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
 // Start server
-app.listen(port, () => {
-  console.log(`✅ Server Hetzner live pe portul ${port}`);
+app.listen(PORT, () => {
+  console.log(`🚀 Server live pe portul ${PORT}`);
 });
