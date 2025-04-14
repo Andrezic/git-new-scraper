@@ -1,6 +1,7 @@
 const express = require('express');
 const { trimiteLeadLaWix } = require('./utils/wixApi');
 const app = express();
+app.use(express.json());
 const port = process.env.PORT || 10000;
 
 app.use(express.json());
