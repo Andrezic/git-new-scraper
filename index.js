@@ -1,53 +1,33 @@
-require('dotenv').config();
 const express = require('express');
-const axios = require('axios');
-const { launchBrowser } = require('./utils/puppeteer');
-
+const { trimiteLeadLaWix } = require('./utils/wixApi');
 const app = express();
-app.use(express.json());
+const port = process.env.PORT || 10000;
 
-const PORT = process.env.PORT || 10000;
+app.use(express.json());
 
 app.post('/genereaza', async (req, res) => {
   try {
-    const browser = await launchBrowser();
-    const page = await browser.newPage();
-    await page.goto('https://www.skywardflow.com/date-firma');
+    const { numeClient, emailClient, cerereClient, firmaId } = req.body;
 
-    const leadData = await page.evaluate(() => {
-      const getText = (selector) => document.querySelector(selector)?.innerText.trim() || '';
-      return {
-        numeClient: getText('#numeFirma'),
-        emailClient: getText('#emailFirma'),
-        cerereClient: getText('#servicii'),
-        dataGenerarii: new Date().toISOString(),
-        status: 'Nou',
-        firmaId: getText('#numeFirma')
-      };
+    if (!numeClient || !emailClient || !cerereClient || !firmaId) {
+      return res.status(400).json({ error: 'Lipsește unul sau mai multe câmpuri necesare.' });
+    }
+
+    // Trimitem lead-ul către Wix API
+    await trimiteLeadLaWix({
+      numeClient,
+      emailClient,
+      cerereClient,
+      firmaId
     });
 
-    console.log('✅ Lead extras:', leadData);
-
-    await axios.post(
-      'https://www.skywardflow.com/_functions/scraper-api',
-      leadData,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: process.env.WIX_API_KEY
-        }
-      }
-    );
-
-    console.log('✅ Lead trimis cu succes către Wix CMS');
-    await browser.close();
-    res.json({ success: true, message: 'Lead generat și trimis cu succes!' });
+    res.status(200).json({ success: true, message: 'Lead trimis cu succes la Wix CMS!' });
   } catch (error) {
-    console.error('❌ Eroare în procesul de scraping sau trimitere:', error.message);
-    res.status(500).json({ success: false, error: error.message });
+    console.error('❌ Eroare în endpoint-ul /genereaza:', error);
+    res.status(500).json({ error: 'Eroare internă de server.' });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Serverul rulează pe portul ${PORT}`);
+app.listen(port, () => {
+  console.log(`Serverul rulează pe portul ${port}`);
 });
