@@ -1,36 +1,53 @@
-// index.js
+require('dotenv').config();
 const express = require('express');
-const puppeteer = require('puppeteer-core');
-const app = express();
-const port = process.env.PORT || 3000;
+const axios = require('axios');
+const { launchBrowser } = require('./utils/puppeteer');
 
+const app = express();
 app.use(express.json());
+
+const PORT = process.env.PORT || 10000;
 
 app.post('/genereaza', async (req, res) => {
   try {
-    const browser = await puppeteer.launch({
-      executablePath: '/usr/bin/chromium-browser',
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
-
+    const browser = await launchBrowser();
     const page = await browser.newPage();
-    await page.goto('https://example.com'); // Înlocuiește cu URL-ul tău
+    await page.goto('https://www.skywardflow.com/date-firma');
 
-    // Simulează scraping
-    const data = await page.evaluate(() => {
+    const leadData = await page.evaluate(() => {
+      const getText = (selector) => document.querySelector(selector)?.innerText.trim() || '';
       return {
-        title: document.title,
+        numeClient: getText('#numeFirma'),
+        emailClient: getText('#emailFirma'),
+        cerereClient: getText('#servicii'),
+        dataGenerarii: new Date().toISOString(),
+        status: 'Nou',
+        firmaId: getText('#numeFirma')
       };
     });
 
+    console.log('✅ Lead extras:', leadData);
+
+    await axios.post(
+      'https://www.skywardflow.com/_functions/scraper-api',
+      leadData,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: process.env.WIX_API_KEY
+        }
+      }
+    );
+
+    console.log('✅ Lead trimis cu succes către Wix CMS');
     await browser.close();
-    res.status(200).json({ success: true, data });
+    res.json({ success: true, message: 'Lead generat și trimis cu succes!' });
   } catch (error) {
-    console.error('Eroare scraping:', error);
+    console.error('❌ Eroare în procesul de scraping sau trimitere:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-app.listen(port, () => {
-  console.log(`Serverul rulează pe portul ${port}`);
+app.listen(PORT, () => {
+  console.log(`Serverul rulează pe portul ${PORT}`);
 });
