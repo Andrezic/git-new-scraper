@@ -1,27 +1,35 @@
-const axios = require('axios');
+// utils/wixApi.js
+import axios from 'axios';
+import dotenv from 'dotenv';
+dotenv.config();
 
-async function trimiteLeadLaWix(leadData) {
+export async function trimiteLeadLaWix(lead) {
+  console.log("📡 Trimitem leadul la Wix:", lead);
+
+  const wixApiKey = process.env.WIX_API_KEY;
+  const siteId = process.env.WIX_SITE_ID;
+
+  if (!wixApiKey || !siteId) {
+    console.error("❌ Lipsesc variabilele din .env: WIX_API_KEY sau WIX_SITE_ID");
+    return { success: false, message: "Missing env vars" };
+  }
+
   try {
-    const response = await axios.post('https://www.wixapis.com/wix-data/v2/collections/Leaduri/items', {
-      data: {
-        clientNameText: leadData.clientNameText,
-        clientEmailText: leadData.clientEmailText,
-        clientRequestText: leadData.clientRequestText,
-        dataText: leadData.dataText || new Date().toISOString(),
-        status: "Nou",
-        firmaId: leadData.firmaId
+    const response = await axios.post(
+      `https://www.skywardflow.com/_functions-dev/receiveLeadFromScraper`,
+      lead,
+      {
+        headers: {
+          Authorization: wixApiKey,
+          "Content-Type": "application/json"
+        }
       }
-    }, {
-      headers: {
-        Authorization: process.env.WIX_API_KEY,
-        'Content-Type': 'application/json'
-      }
-    });
+    );
 
-    console.log("✅ Lead trimis cu succes la Wix:", response.data);
+    console.log("✅ Răspuns de la Wix:", response.data);
+    return response.data;
   } catch (error) {
-    console.error("❌ Eroare la trimiterea lead-ului către Wix:", error.response ? error.response.data : error.message);
+    console.error("❌ Eroare la trimiterea leadului:", error.response?.data || error.message);
+    return { success: false, message: "Eroare la trimiterea leadului." };
   }
 }
-
-module.exports = { trimiteLeadLaWix };
