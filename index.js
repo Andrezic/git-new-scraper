@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 
 dotenv.config();
+
 const app = express();
 const port = process.env.PORT || 10000;
 
@@ -32,7 +33,7 @@ app.post('/genereaza', async (req, res) => {
   }
 
   try {
-    const response = await axios.post('https://www.skywardflow.com/_functions/receiveLeadFromScraper', {
+    const response = await axios.post('https://www.skywardflow.com/_functions/post-lead', {
       clientNameText,
       clientEmailText,
       clientRequestText,
@@ -42,19 +43,24 @@ app.post('/genereaza', async (req, res) => {
     });
 
     console.log("✅ Răspuns Wix:", response.data);
-    res.status(200).json({ success: true, message: 'Lead trimis cu succes la Wix CMS!' });
-
+    res.status(200).json({
+      success: true,
+      message: 'Lead trimis cu succes la Wix CMS!',
+      wixResponse: response.data
+    });
   } catch (error) {
     console.error("❌ Eroare la trimiterea lead-ului către Wix:", {
       message: error.message,
-      response: error.response?.data,
-      status: error.response?.status
+      response: error.response?.data || "",
+      status: error.response?.status || 500
     });
-
-    res.status(500).json({ error: 'Eroare la trimiterea leadului.' });
+    res.status(500).json({
+      error: "Eroare la trimiterea leadului.",
+      details: error.response?.data || error.message
+    });
   }
 });
 
 app.listen(port, () => {
-  console.log(`Serverul rulează pe portul ${port}`);
+  console.log(`✅ Serverul rulează pe portul ${port}`);
 });
