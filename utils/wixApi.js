@@ -4,12 +4,12 @@ async function trimiteLeadLaWix(leadData) {
   try {
     const response = await axios.post('https://www.wixapis.com/wix-data/v2/collections/Leaduri/items', {
       data: {
-        numeclient: leadData.numeClient,
-        emailclient: leadData.emailClient,
-        cerereclient: leadData.cerereClient,
-        datagenerarii: new Date().toISOString(),
+        clientNameText: leadData.clientNameText,
+        clientEmailText: leadData.clientEmailText,
+        clientRequestText: leadData.clientRequestText,
+        dataText: leadData.dataText || new Date().toISOString(),
         status: "Nou",
-        firmaid: leadData.firmaId
+        firmaId: leadData.firmaId
       }
     }, {
       headers: {

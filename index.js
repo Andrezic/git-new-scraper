@@ -4,21 +4,26 @@ const app = express();
 app.use(express.json());
 const port = process.env.PORT || 10000;
 
-app.use(express.json());
-
 app.post('/genereaza', async (req, res) => {
   try {
-    const { numeClient, emailClient, cerereClient, firmaId } = req.body;
+    const {
+      clientNameText,
+      clientEmailText,
+      clientRequestText,
+      dataText,
+      firmaId
+    } = req.body;
 
-    if (!numeClient || !emailClient || !cerereClient || !firmaId) {
+    if (!clientNameText || !clientEmailText || !clientRequestText || !firmaId) {
       return res.status(400).json({ error: 'Lipsește unul sau mai multe câmpuri necesare.' });
     }
 
     // Trimitem lead-ul către Wix API
     await trimiteLeadLaWix({
-      numeClient,
-      emailClient,
-      cerereClient,
+      clientNameText,
+      clientEmailText,
+      clientRequestText,
+      dataText,
       firmaId
     });
 
