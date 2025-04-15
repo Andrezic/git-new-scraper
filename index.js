@@ -33,7 +33,7 @@ app.post('/genereaza', async (req, res) => {
   }
 
   try {
-    const response = await axios.post('https://www.skywardflow.com/_functions/post-lead', {
+    const response = await axios.post('https://www.skywardflow.com/_functions/genereaza', {
       clientNameText,
       clientEmailText,
       clientRequestText,
