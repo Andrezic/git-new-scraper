@@ -1,8 +1,8 @@
-import express from 'express';
-import axios from 'axios';
-import bodyParser from 'body-parser';
-import dotenv from 'dotenv';
-import cors from 'cors';
+const express = require('express');
+const axios = require('axios');
+const bodyParser = require('body-parser');
+const dotenv = require('dotenv');
+const cors = require('cors');
 
 dotenv.config();
 const app = express();
@@ -26,7 +26,6 @@ app.post('/genereaza', async (req, res) => {
     firmaId
   } = req.body;
 
-  // Validare câmpuri esențiale
   if (!clientNameText || !clientEmailText || !clientRequestText || !firmaId) {
     console.error("❌ Lipsesc câmpuri necesare!");
     return res.status(400).json({ error: "Lipsește unul sau mai multe câmpuri necesare." });
