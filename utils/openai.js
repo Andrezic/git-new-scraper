@@ -1,12 +1,11 @@
 // utils/openai.js
-import axios from 'axios';
-import dotenv from 'dotenv';
-dotenv.config();
+const axios = require('axios');
+require('dotenv').config();
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const OPENAI_MODEL = 'gpt-4'; // Poți schimba în gpt-3.5-turbo dacă vrei să economisești
+const OPENAI_MODEL = 'gpt-4';
 
-export async function genereazaTextLead(profilFirma) {
+async function genereazaTextLead(profilFirma) {
   if (!OPENAI_API_KEY) {
     console.error("❌ Lipsă OPENAI_API_KEY în .env");
     return "Mesaj generat de rezervă – lipsă API KEY.";
@@ -52,3 +51,5 @@ Un mesaj scurt, clar, relevant, de 3-5 fraze, în stil profesional și convingă
     return "Nu s-a putut genera mesajul automat.";
   }
 }
+
+module.exports = { genereazaTextLead };

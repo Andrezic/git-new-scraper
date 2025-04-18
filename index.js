@@ -35,7 +35,7 @@ app.post('/genereaza', async (req, res) => {
     // 2. Generăm mesajul AI
     const clientRequestText = await genereazaTextLead(profilFirma);
 
-    // 3. Trimitem leadul spre salvare
+    // 3. Trimitem leadul spre salvare în Wix CMS
     const response = await axios.post('https://www.skywardflow.com/_functions/genereaza', {
       clientNameText,
       clientEmailText,
