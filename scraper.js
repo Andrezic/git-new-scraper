@@ -4,7 +4,7 @@ const axios = require('axios');
 async function launchBrowser() {
   return await puppeteer.launch({
     executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-    headless: false, // ❗ NU mai e headless, ca să forțăm DOM real
+    headless: false,
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
 }
@@ -17,12 +17,10 @@ async function launchBrowser() {
   const page = await browser.newPage();
 
   try {
+    console.log("🌐 Accesăm pagina:", url);
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
 
-    // ❗ Screenshot înainte de selector, ca să vedem exact DOM-ul
-    await page.screenshot({ path: 'check-before-wait.png', fullPage: true });
-
-    await page.waitForSelector('#inputNumeFirma', { timeout: 20000 });
+    await page.waitForTimeout(5000); // așteptăm 5 secunde să se populeze tot
 
     const lead = await page.evaluate(() => {
       const getVal = (id) => {
@@ -35,7 +33,11 @@ async function launchBrowser() {
         clientEmailText: "client@testmail.com",
         clientRequestText: "Cerere automată pentru test",
         firmaId: new URLSearchParams(location.search).get("firmaId"),
-        contactAutomat: document.querySelector('#switchContactAutomat')?.checked || false
+        contactAutomat: document.querySelector('#switchContactAutomat')?.checked || false,
+        firmaNume: getVal('#inputNumeFirma'),
+        firmaEmail: getVal('#inputEmailFirma'),
+        firmaWebsite: getVal('#inputWebsiteFirma'),
+        firmaServicii: getVal('#inputServicii')
       };
     });
 
