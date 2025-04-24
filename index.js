@@ -1,11 +1,11 @@
-// index.js – Complet, cu generare lead + trimitere email IMM + email client (dacă switchul e ON)
+// index.js – CommonJS compatibil Render – lead + email IMM + email client (dacă switchul e ON)
 
-import express from 'express';
-import axios from 'axios';
-import cors from 'cors';
-import bodyParser from 'body-parser';
-import { config } from 'dotenv';
-config();
+const express = require('express');
+const axios = require('axios');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const dotenv = require('dotenv');
+dotenv.config();
 
 const app = express();
 app.use(cors());
