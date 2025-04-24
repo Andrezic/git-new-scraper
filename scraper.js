@@ -23,7 +23,7 @@ async function launchBrowser() {
 
   try {
     const response = await axios.post(
-      'https://skyward-scraper.onrender.com/genereaza',
+      'https://git-new-scraper.onrender.com/genereaza', // ✅ CORECT
       lead,
       { headers: { 'Content-Type': 'application/json' } }
     );
