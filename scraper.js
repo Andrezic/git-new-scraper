@@ -1,12 +1,10 @@
-// scraper.js – NO TYPESCRIPT, NO ERRORS, 100% Render compatible
-
 const puppeteer = require('puppeteer-core');
 const axios = require('axios');
 
 async function launchBrowser() {
   return await puppeteer.launch({
-    executablePath: '/usr/bin/google-chrome',
-    headless: true,
+    executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    headless: false, // ❗ NU mai e headless, ca să forțăm DOM real
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
 }
@@ -19,11 +17,15 @@ async function launchBrowser() {
   const page = await browser.newPage();
 
   try {
-    await page.goto(url, { waitUntil: 'networkidle2' });
-    await page.waitForSelector('#inputNumeFirma', { timeout: 10000 });
+    await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+
+    // ❗ Screenshot înainte de selector, ca să vedem exact DOM-ul
+    await page.screenshot({ path: 'check-before-wait.png', fullPage: true });
+
+    await page.waitForSelector('#inputNumeFirma', { timeout: 20000 });
 
     const lead = await page.evaluate(() => {
-      const get = (id) => {
+      const getVal = (id) => {
         const el = document.querySelector(id);
         return el ? el.value || el.innerText || '' : '';
       };
@@ -47,7 +49,7 @@ async function launchBrowser() {
 
     console.log("📤 Trimis către server:", response.data);
   } catch (err) {
-    console.error("❌ Eroare scraper:", err.message);
+    console.error("❌ Eroare în scraping sau trimitere:", err.message);
   } finally {
     await browser.close();
   }
