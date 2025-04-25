@@ -1,7 +1,7 @@
-// index.js – CommonJS compatibil Render – lead + email IMM + email client (dacă switchul e ON)
+// index.js – Versiune cu fetch în loc de axios (pentru compatibilitate totală pe Render)
 
 const express = require('express');
-const axios = require('axios');
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
@@ -17,41 +17,63 @@ const PORT = process.env.PORT || 3000;
 app.post('/genereaza', async (req, res) => {
   try {
     const lead = req.body;
-
-    // 1. Salvează leadul în Wix CMS – ACTUALIZAT
     console.log("🔁 Trimit către Wix:", lead);
-    const wixResponse = await axios.post('https://www.skywardflow.com/_functions/genereaza', lead);
-    console.log("✅ Răspuns Wix:", wixResponse.data);
 
-
-    // 2. Ia datele firmei din Wix CMS
-    const firmaResp = await axios.post('https://www.skywardflow.com/_functions/getFirma', {
-      firmaId: lead.firmaId
+    // 1. Trimite leadul către Wix CMS
+    const wixResp = await fetch('https://www.skywardflow.com/_functions/genereaza', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(lead)
     });
-    const firma = firmaResp.data;
+
+    if (!wixResp.ok) {
+      const errText = await wixResp.text();
+      throw new Error(`Eroare de la Wix: ${wixResp.status} - ${errText}`);
+    }
+
+    const wixData = await wixResp.json();
+    console.log("✅ Răspuns Wix:", wixData);
+
+    // 2. Obține datele firmei
+    const firmaResp = await fetch('https://www.skywardflow.com/_functions/getFirma', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ firmaId: lead.firmaId })
+    });
+
+    const firma = await firmaResp.json();
 
     // 3. Trimite email IMM
-    await axios.post('https://email.yourdomain.com/send', {
-      to: firma.inputEmailFirma,
-      subject: '🔔 Ai un nou lead prin Skyward Flow!',
-      html: `Salut ${firma.inputNumeFirma},<br><br>AI-ul nostru ți-a generat automat un lead nou:<br>
-            Nume client: ${lead.clientNameText}<br>
-            Email: ${lead.clientEmailText}<br>
-            Cerere: ${lead.clientRequestText}`
+    await fetch('https://email.yourdomain.com/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: firma.inputEmailFirma,
+        subject: '🔔 Ai un nou lead prin Skyward Flow!',
+        html: `Salut ${firma.inputNumeFirma},<br><br>AI-ul nostru ți-a generat automat un lead nou:<br>
+              Nume client: ${lead.clientNameText}<br>
+              Email: ${lead.clientEmailText}<br>
+              Cerere: ${lead.clientRequestText}`
+      })
     });
 
     // 4. Trimite email clientului dacă switch-ul e activat
     if (firma.contactAutomat === true) {
-      await axios.post('https://email.yourdomain.com/send', {
-        to: lead.clientEmailText,
-        subject: `Mesaj automat din partea ${firma.inputNumeFirma}`,
-        html: `Bună!<br><br>${firma.inputNumeFirma} a primit solicitarea ta și este interesată de o colaborare.<br>
-              Poți accesa site-ul lor: <a href="${firma.inputWebsiteFirma}">${firma.inputWebsiteFirma}</a><br>
-              Contact direct: ${firma.inputEmailFirma}`
+      await fetch('https://email.yourdomain.com/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: lead.clientEmailText,
+          subject: `Mesaj automat din partea ${firma.inputNumeFirma}`,
+          html: `Bună!<br><br>${firma.inputNumeFirma} a primit solicitarea ta și este interesată de o colaborare.<br>
+                Poți accesa site-ul lor: <a href="${firma.inputWebsiteFirma}">${firma.inputWebsiteFirma}</a><br>
+                Contact direct: ${firma.inputEmailFirma}`
+        })
       });
     }
 
     res.status(200).json({ success: true });
+
   } catch (err) {
     console.error('❌ Eroare la generare lead:', err);
     res.status(500).json({ success: false, error: err.message });
