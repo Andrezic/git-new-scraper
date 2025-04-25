@@ -19,7 +19,10 @@ app.post('/genereaza', async (req, res) => {
     const lead = req.body;
 
     // 1. Salvează leadul în Wix CMS – ACTUALIZAT
-    await axios.post('https://www.skywardflow.com/_functions/genereaza', lead);
+    console.log("🔁 Trimit către Wix:", lead);
+    const wixResponse = await axios.post('https://www.skywardflow.com/_functions/genereaza', lead);
+    console.log("✅ Răspuns Wix:", wixResponse.data);
+
 
     // 2. Ia datele firmei din Wix CMS
     const firmaResp = await axios.post('https://www.skywardflow.com/_functions/getFirma', {
