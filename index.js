@@ -1,4 +1,4 @@
-// index.js – Versiune finală Skyward Flow, complet sincronizat cu Wix Automation
+// index.js – Versiune finală Skyward Flow, sincronizat complet
 
 const express = require('express');
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
@@ -41,15 +41,15 @@ app.post('/genereaza', async (req, res) => {
     const firma = await firmaResp.json();
     console.log("📦 Firma returnată:", firma);
 
-    // 🔔 Declanșăm automatizarea Wix pentru IMM
+    // 🔔 Trimitem către Wix Automation IMM
     await fetch("https://www.skywardflow.com/_functions/declanseazaEmailIMM", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        firmaId: lead.firmaId,
-        clientNameText: lead.clientNameText,
-        clientEmailText: lead.clientEmailText,
-        clientRequestText: lead.clientRequestText
+        firmaEmail: firma.inputEmailFirma,
+        firmaNume: firma.inputNumeFirma,
+        clientNume: lead.clientNameText,
+        clientCerere: lead.clientRequestText
       })
     });
 
