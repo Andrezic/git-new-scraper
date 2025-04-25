@@ -13,6 +13,7 @@ app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 3000;
 
+// 🔁 Endpoint principal – generează lead
 app.post('/genereaza', async (req, res) => {
   try {
     const lead = req.body;
@@ -58,6 +59,31 @@ app.post('/genereaza', async (req, res) => {
 
   } catch (err) {
     console.error('❌ Eroare la generare lead:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 🧪 Endpoint de test pentru trimitere directă email IMM
+app.post('/test-email', async (req, res) => {
+  try {
+    const payload = {
+      firmaEmail: "skywardflow@gmail.com",
+      firmaNume: "Skyward Flow",
+      clientNume: "Client Test Direct",
+      clientCerere: "Cerere test directă"
+    };
+
+    const automationResp = await fetch('https://www.skywardflow.com/_functions/declanseazaEmailIMM', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await automationResp.json();
+    console.log("📨 Test declanșat manual:", result);
+    res.status(200).json({ success: true, result });
+  } catch (err) {
+    console.error("❌ Eroare test direct:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
