@@ -40,6 +40,7 @@ app.post('/genereaza', async (req, res) => {
 
     const firma = await firmaResp.json();
     console.log("📦 Firma returnată:", firma);
+    console.log("📨 Email detectat pentru automatizare:", firma.inputEmailFirma);
 
     // 🔔 Trimitem către Wix Automation IMM
     await fetch("https://www.skywardflow.com/_functions/declanseazaEmailIMM", {
