@@ -1,4 +1,4 @@
-// index.js – Versiune finală Skyward Flow, sincronizat complet
+// index.js – Versiunea finală Skyward Flow cu MailerSend
 
 const express = require('express');
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
@@ -6,6 +6,8 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 dotenv.config();
+
+const { trimiteEmailIMM } = require('./backend/emailService.web'); // <--- corect acum
 
 const app = express();
 app.use(cors());
@@ -33,26 +35,28 @@ app.post('/genereaza', async (req, res) => {
     const wixData = await wixResp.json();
     console.log("✅ Răspuns Wix:", wixData);
 
+    // 📦 Luăm datele firmei
     const firmaResp = await fetch('https://www.skywardflow.com/_functions/getFirma', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ firmaId: lead.firmaId })
     });
 
-    const firma = await firmaResp.json();
-    console.log("📦 Firma returnată:", firma);
-    console.log("📨 Email detectat pentru automatizare:", firma.inputEmailFirma);
+    if (!firmaResp.ok) {
+      const errText = await firmaResp.text();
+      throw new Error(`Eroare la obținere firmă: ${firmaResp.status} - ${errText}`);
+    }
 
-    // 🔔 Trimitem către Wix Automation IMM
-    await fetch("https://www.skywardflow.com/_functions/declanseazaEmailIMM", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        firmaEmail: firma.inputEmailFirma,
-        firmaNume: firma.inputNumeFirma,
-        clientNume: lead.clientNameText,
-        clientCerere: lead.clientRequestText
-      })
+    const firma = await firmaResp.json();
+    console.log("📦 Firma găsită:", firma);
+
+    // 📨 Trimitem email IMM prin MailerSend
+    const continutLead = `Lead nou generat:\n\nNume client: ${lead.clientNameText}\nEmail client: ${lead.clientEmailText}\nCerere client: ${lead.clientRequestText}`;
+
+    await trimiteEmailIMM({
+      numeFirma: firma.inputNumeFirma,
+      emailDestinatar: firma.inputEmailFirma,
+      continutLead: continutLead
     });
 
     res.status(200).json({ success: true });
@@ -63,27 +67,20 @@ app.post('/genereaza', async (req, res) => {
   }
 });
 
-// 🧪 Endpoint de test pentru trimitere directă email IMM
+// Endpoint de testare email (opțional)
 app.post('/test-email', async (req, res) => {
   try {
     const payload = {
-      firmaEmail: "skywardflow@gmail.com",
-      firmaNume: "Skyward Flow",
-      clientNume: "Client Test Direct",
-      clientCerere: "Cerere test directă"
+      numeFirma: "Skyward Flow",
+      emailDestinatar: "skywardflow@gmail.com",
+      continutLead: "Lead test: Client Test - Cerere Test"
     };
 
-    const automationResp = await fetch('https://www.skywardflow.com/_functions/declanseazaEmailIMM', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+    await trimiteEmailIMM(payload);
 
-    const result = await automationResp.json();
-    console.log("📨 Test declanșat manual:", result);
-    res.status(200).json({ success: true, result });
+    res.status(200).json({ success: true, message: "Email de test trimis" });
   } catch (err) {
-    console.error("❌ Eroare test direct:", err);
+    console.error('❌ Eroare test email:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
