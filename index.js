@@ -51,13 +51,24 @@ app.post('/genereaza', async (req, res) => {
     console.log("📦 Firma găsită:", firma);
 
     // 📨 Trimitem email IMM prin MailerSend
-    const continutLead = `Lead nou generat:\n\nNume client: ${lead.clientNameText}\nEmail client: ${lead.clientEmailText}\nCerere client: ${lead.clientRequestText}`;
+    const continutLeadIMM = `Lead nou generat:\n\nNume client: ${lead.clientNameText}\nEmail client: ${lead.clientEmailText}\nCerere client: ${lead.clientRequestText}`;
 
     await trimiteEmailIMM({
       numeFirma: firma.inputNumeFirma,
       emailDestinatar: firma.inputEmailFirma,
-      continutLead: continutLead
+      continutLead: continutLeadIMM
     });
+
+    // 📨 Dacă switchul e ON, trimitem și către client
+    if (firma.switchContactAutomat === true || firma.switchContactAutomat === 'true') {
+      const continutLeadClient = `Bună,\n\nFirma ${firma.inputNumeFirma} a primit cererea ta:\n\n\"${lead.clientRequestText}\"\n\nTe vor contacta în curând.\n\n--\nSkyward Flow`;
+
+      await trimiteEmailIMM({
+        numeFirma: firma.inputNumeFirma,
+        emailDestinatar: lead.clientEmailText,
+        continutLead: continutLeadClient
+      });
+    }
 
     res.status(200).json({ success: true });
 
