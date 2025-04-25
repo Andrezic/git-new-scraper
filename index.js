@@ -7,7 +7,7 @@ const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
 dotenv.config();
 
-const { trimiteEmailIMM } = require('./backend/emailService.web'); // <--- corect acum
+const { trimiteEmailIMM } = require('./backend/emailService');
 
 const app = express();
 app.use(cors());
