@@ -3,7 +3,7 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
 const MAILERSEND_API_KEY = process.env.MAILERSEND_API_KEY;
 const MAILERSEND_URL = "https://api.mailersend.com/v1/email";
 
-async function trimiteEmailIMM({ numeFirma, emailDestinatar, clientName, clientEmail, clientRequest }) {
+async function trimiteEmailIMM({ numeFirma, emailDestinatar, clientName, clientRequest }) {
   try {
     const response = await fetch(MAILERSEND_URL, {
       method: "POST",
@@ -16,19 +16,25 @@ async function trimiteEmailIMM({ numeFirma, emailDestinatar, clientName, clientE
           email: "noreply@skywardflow.com",
           name: "Skyward Flow"
         },
-        template_id: "0r83ql3mj2zgzw1j",
-        personalizations: [{
-          to: [{
-            email: emailDestinatar
-          }],
-          subject: "✅ Skyward Flow: Ai un nou Business Match pentru firma ta! 🚀",
-          dynamic_template_data: {
-            numeFirma: numeFirma,
-            clientName: clientName,
-            account_name: "Skyward Flow",
-            clientRequest: clientRequest
+        to: [
+          {
+            email: emailDestinatar,
+            name: numeFirma
           }
-        }]
+        ],
+        template_id: "0r83ql3mj2zgzw1j",
+        subject: "✅ Skyward Flow: Ai un nou Business Match pentru firma ta! 🚀",
+        variables: [
+          {
+            email: emailDestinatar,
+            substitutions: {
+              numeFirma: numeFirma,
+              clientName: clientName,
+              account_name: "Skyward Flow",
+              clientRequest: clientRequest
+            }
+          }
+        ]
       })
     });
 
@@ -38,7 +44,7 @@ async function trimiteEmailIMM({ numeFirma, emailDestinatar, clientName, clientE
       throw new Error(`MailerSend API error: ${response.status}`);
     }
 
-    console.log("✅ Email trimis cu succes prin MailerSend Template!");
+    console.log("✅ Email trimis cu succes prin MailerSend Template cu to și subject!");
     return { success: true };
   } catch (error) {
     console.error("❌ Eroare trimitere email:", error.message);
