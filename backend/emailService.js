@@ -18,7 +18,7 @@ async function trimiteEmailIMM({ numeFirma, emailDestinatar, clientName, clientR
         },
         template_id: "0r83ql3mj2zgzw1j",
         personalizations: [{
-          to: [{ 
+          to: [{
             email: emailDestinatar,
             name: numeFirma
           }],
@@ -39,7 +39,7 @@ async function trimiteEmailIMM({ numeFirma, emailDestinatar, clientName, clientR
       throw new Error(`MailerSend API error: ${response.status}`);
     }
 
-    console.log("✅ Email trimis cu succes prin MailerSend Template + personalizations!");
+    console.log("✅ Email trimis cu succes prin MailerSend Template cu personalizations!");
     return { success: true };
   } catch (error) {
     console.error("❌ Eroare trimitere email:", error.message);
