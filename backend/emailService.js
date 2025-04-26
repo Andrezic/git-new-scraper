@@ -16,7 +16,7 @@ async function trimiteEmailIMM({ numeFirma, emailDestinatar, clientName, clientE
           email: "noreply@skywardflow.com",
           name: "Skyward Flow"
         },
-        template_id: "TEMPLATE_ID_DE_LA_TINE",
+        template_id: "0r83ql3mj2zgzw1j",
         personalizations: [{
           to: [{ email: emailDestinatar }],
           subject: "✅ Skyward Flow: Ai un nou Business Match pentru firma ta! 🚀",  // <-- subject aici
