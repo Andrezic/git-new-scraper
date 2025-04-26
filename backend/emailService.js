@@ -17,7 +17,7 @@ async function trimiteEmailIMM({ numeFirma, emailDestinatar, clientName, clientR
         }
       ],
       subject: "Ai un nou Business Match! 🚀",
-      template_id: TEMPLATE_ID_NUMERIC, // <-- fără ghilimele, ID-ul tău real (integer)
+      template_id: 351ndgwkqzrgzqx8, // <-- fără ghilimele, ID-ul tău real (integer)
       variables: [
         {
           email: emailDestinatar,
