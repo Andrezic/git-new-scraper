@@ -1,5 +1,3 @@
-// emailService.js - Varianta curată cu Template MailerSend (de la zero)
-
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 const MAILERSEND_API_KEY = process.env.MAILERSEND_API_KEY;
@@ -18,8 +16,8 @@ async function trimiteEmailIMM({ numeFirma, emailDestinatar, clientName, clientR
           name: numeFirma
         }
       ],
-      template_id: "351ndgwkqzrgzqx8", // <- Înlocuiește cu ID-ul real din MailerSend
-      subject: "Ai un nou Business Match! 🚀", // <- Dacă template-ul nu are subject definit, trebuie să pui aici
+      template_id: 351ndgwkqzrgzqx8, // <-- Fără ghilimele, ID-ul tău real, ca număr
+      subject: "Ai un nou Business Match! 🚀",
       variables: [
         {
           email: emailDestinatar,
