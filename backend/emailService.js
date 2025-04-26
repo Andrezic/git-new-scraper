@@ -16,17 +16,17 @@ async function trimiteEmailIMM({ numeFirma, emailDestinatar, clientName, clientR
           name: numeFirma
         }
       ],
-      template_id: 351ndgwkqzrgzqx8, // <-- Fără ghilimele, ID-ul tău real, ca număr
       subject: "Ai un nou Business Match! 🚀",
+      template_id: TEMPLATE_ID_NUMERIC, // <-- fără ghilimele, ID-ul tău real (integer)
       variables: [
         {
           email: emailDestinatar,
-          substitutions: {
-            numeFirma: numeFirma,
-            clientName: clientName,
-            clientRequest: clientRequest,
-            account_name: "Skyward Flow"
-          }
+          substitutions: [
+            { var: "numeFirma", value: numeFirma },
+            { var: "clientName", value: clientName },
+            { var: "clientRequest", value: clientRequest },
+            { var: "account_name", value: "Skyward Flow" }
+          ]
         }
       ]
     };
