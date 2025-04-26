@@ -16,20 +16,25 @@ async function trimiteEmailIMM({ numeFirma, emailDestinatar, clientName, clientR
           email: "noreply@skywardflow.com",
           name: "Skyward Flow"
         },
-        template_id: "0r83ql3mj2zgzw1j",
-        personalizations: [{
-          to: [{
+        to: [
+          {
             email: emailDestinatar,
             name: numeFirma
-          }],
-          subject: "✅ Skyward Flow: Ai un nou Business Match pentru firma ta! 🚀",
-          dynamic_template_data: {
-            numeFirma: numeFirma,
-            clientName: clientName,
-            account_name: "Skyward Flow",
-            clientRequest: clientRequest
           }
-        }]
+        ],
+        subject: "✅ Skyward Flow: Ai un nou Business Match pentru firma ta! 🚀",
+        template_id: "0r83ql3mj2zgzw1j",
+        variables: [
+          {
+            email: emailDestinatar,
+            substitutions: {
+              numeFirma: numeFirma,
+              clientName: clientName,
+              account_name: "Skyward Flow",
+              clientRequest: clientRequest
+            }
+          }
+        ]
       })
     });
 
@@ -39,7 +44,7 @@ async function trimiteEmailIMM({ numeFirma, emailDestinatar, clientName, clientR
       throw new Error(`MailerSend API error: ${response.status}`);
     }
 
-    console.log("✅ Email trimis cu succes prin MailerSend Template cu personalizations!");
+    console.log("✅ Email trimis cu succes prin MailerSend cu to + variables!");
     return { success: true };
   } catch (error) {
     console.error("❌ Eroare trimitere email:", error.message);
