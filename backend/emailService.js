@@ -17,7 +17,7 @@ async function trimiteEmailIMM({ numeFirma, emailDestinatar, clientName, clientR
         }
       ],
       subject: "Ai un nou Business Match! 🚀",
-      template_id: 351ndgwkqzrgzqx8, // <-- fără ghilimele, ID-ul tău real (integer)
+      template_id: "351ndgwkqzrgzqx8", // cu ghilimele pentru string
       variables: [
         {
           email: emailDestinatar,
@@ -55,5 +55,5 @@ async function trimiteEmailIMM({ numeFirma, emailDestinatar, clientName, clientR
 }
 
 module.exports = {
-  trimiteEmailIMM
+  trimiteEmailIMM;
 };
