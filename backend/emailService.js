@@ -3,7 +3,7 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
 const MAILERSEND_API_KEY = process.env.MAILERSEND_API_KEY;
 const MAILERSEND_URL = "https://api.mailersend.com/v1/email";
 
-async function trimiteEmailIMM({ numeFirma, emailDestinatar, clientName, clientRequest }) {
+async function trimiteEmailIMM({ numeFirma, emailDestinatar, clientName, clientEmail, clientRequest }) {
   try {
     const response = await fetch(MAILERSEND_URL, {
       method: "POST",
@@ -16,15 +16,20 @@ async function trimiteEmailIMM({ numeFirma, emailDestinatar, clientName, clientR
           email: "noreply@skywardflow.com",
           name: "Skyward Flow"
         },
-        to: emailDestinatar,  // STRING direct, nu [{email:...}]
-        subject: "✅ Skyward Flow: Ai un nou Business Match pentru firma ta! 🚀",
-        template_id: "0r83ql3mj2zgzw1j",
-        personalization: {
-          numeFirma: numeFirma,
-          clientName: clientName,
-          account_name: "Skyward Flow",
-          clientRequest: clientRequest
-        }
+        to: [{
+          email: emailDestinatar,
+          name: numeFirma
+        }],
+        template_id: "YOUR_TEMPLATE_ID_HERE",
+        personalizations: [{
+          to: [{ email: emailDestinatar }],
+          dynamic_template_data: {
+            clientName: clientName,
+            clientEmail: clientEmail,
+            clientRequest: clientRequest,
+            numeFirma: numeFirma
+          }
+        }]
       })
     });
 
@@ -34,7 +39,7 @@ async function trimiteEmailIMM({ numeFirma, emailDestinatar, clientName, clientR
       throw new Error(`MailerSend API error: ${response.status}`);
     }
 
-    console.log("✅ Email trimis cu succes prin MailerSend (nou format 2025)!");
+    console.log("✅ Email trimis cu succes prin MailerSend Template!");
     return { success: true };
   } catch (error) {
     console.error("❌ Eroare trimitere email:", error.message);
