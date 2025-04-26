@@ -3,7 +3,7 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
 const MAILERSEND_API_KEY = process.env.MAILERSEND_API_KEY;
 const MAILERSEND_URL = "https://api.mailersend.com/v1/email";
 
-async function trimiteEmailIMM({ numeFirma, emailDestinatar, clientName, clientEmail, clientRequest }) {
+async function trimiteEmailIMM({ numeFirma, emailDestinatar, clientName, clientRequest }) {
   try {
     const response = await fetch(MAILERSEND_URL, {
       method: "POST",
@@ -20,16 +20,14 @@ async function trimiteEmailIMM({ numeFirma, emailDestinatar, clientName, clientE
           email: emailDestinatar,
           name: numeFirma
         }],
-        template_id: "YOUR_TEMPLATE_ID_HERE",
-        personalizations: [{
-          to: [{ email: emailDestinatar }],
-          dynamic_template_data: {
-            clientName: clientName,
-            clientEmail: clientEmail,
-            clientRequest: clientRequest,
-            numeFirma: numeFirma
-          }
-        }]
+        subject: "✅ Skyward Flow: Ai un nou Business Match pentru firma ta! 🚀",
+        template_id: "TEMPLATE_ID_DE_LA_TINE",
+        dynamic_template_data: {
+          numeFirma: numeFirma,
+          clientName: clientName,
+          account_name: "Skyward Flow",
+          clientRequest: clientRequest
+        }
       })
     });
 
