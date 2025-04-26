@@ -89,7 +89,13 @@ app.post('/test-email', async (req, res) => {
       clientRequest: "Sunt interesat de serviciile voastre pentru vizualizări 3D."
     };
 
-    await trimiteEmailIMM(payload);
+    await trimiteEmailIMM({
+      numeFirma: payload.numeFirma,
+      emailDestinatar: payload.emailDestinatar,
+      clientName: payload.clientName,
+      clientEmail: payload.clientEmail,
+      clientRequest: payload.clientRequest
+    });
 
     res.status(200).json({ success: true, message: "Email de test trimis cu lead realistic" });
   } catch (err) {
