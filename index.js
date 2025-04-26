@@ -84,12 +84,14 @@ app.post('/test-email', async (req, res) => {
     const payload = {
       numeFirma: "Skyward Flow",
       emailDestinatar: "skywardflow@gmail.com",
-      continutLead: "Lead test: Client Test - Cerere Test"
+      clientName: "Andrei Popescu",
+      clientEmail: "andreipopescu@gmail.com",
+      clientRequest: "Sunt interesat de serviciile voastre pentru vizualizări 3D."
     };
 
     await trimiteEmailIMM(payload);
 
-    res.status(200).json({ success: true, message: "Email de test trimis" });
+    res.status(200).json({ success: true, message: "Email de test trimis cu lead realistic" });
   } catch (err) {
     console.error('❌ Eroare test email:', err);
     res.status(500).json({ success: false, error: err.message });
