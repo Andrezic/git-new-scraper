@@ -1,109 +1,68 @@
-// index.js – Versiunea finală Skyward Flow cu MailerSend
+// index.js - Varianta completă actualizată corect
 
 const express = require('express');
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const dotenv = require('dotenv');
-dotenv.config();
-
 const { trimiteEmailIMM } = require('./backend/emailService');
+require('dotenv').config();
 
 const app = express();
+const PORT = process.env.PORT || 3000;
+
 app.use(cors());
 app.use(bodyParser.json());
 
-const PORT = process.env.PORT || 3000;
-
-// 🔁 Endpoint principal – generează lead
-app.post('/genereaza', async (req, res) => {
-  try {
-    const lead = req.body;
-    console.log("🔁 Trimit către Wix:", lead);
-
-    const wixResp = await fetch('https://www.skywardflow.com/_functions/genereaza', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(lead)
-    });
-
-    if (!wixResp.ok) {
-      const errText = await wixResp.text();
-      throw new Error(`Eroare de la Wix: ${wixResp.status} - ${errText}`);
-    }
-
-    const wixData = await wixResp.json();
-    console.log("✅ Răspuns Wix:", wixData);
-
-    // 📦 Luăm datele firmei
-    const firmaResp = await fetch('https://www.skywardflow.com/_functions/getFirma', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ firmaId: lead.firmaId })
-    });
-
-    if (!firmaResp.ok) {
-      const errText = await firmaResp.text();
-      throw new Error(`Eroare la obținere firmă: ${firmaResp.status} - ${errText}`);
-    }
-
-    const firma = await firmaResp.json();
-    console.log("📦 Firma găsită:", firma);
-
-    // 📨 Trimitem email IMM prin MailerSend
-    const continutLeadIMM = `Lead nou generat:\n\nNume client: ${lead.clientNameText}\nEmail client: ${lead.clientEmailText}\nCerere client: ${lead.clientRequestText}`;
-
-    await trimiteEmailIMM({
-      numeFirma: firma.inputNumeFirma,
-      emailDestinatar: firma.inputEmailFirma,
-      continutLead: continutLeadIMM
-    });
-
-    // 📨 Dacă switchul e ON, trimitem și către client
-    if (firma.switchContactAutomat === true || firma.switchContactAutomat === 'true') {
-      const continutLeadClient = `Bună,\n\nFirma ${firma.inputNumeFirma} a primit cererea ta:\n\n\"${lead.clientRequestText}\"\n\nTe vor contacta în curând.\n\n--\nSkyward Flow`;
-
-      await trimiteEmailIMM({
-        numeFirma: firma.inputNumeFirma,
-        emailDestinatar: lead.clientEmailText,
-        continutLead: continutLeadClient
-      });
-    }
-
-    res.status(200).json({ success: true });
-
-  } catch (err) {
-    console.error('❌ Eroare la generare lead:', err);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// Endpoint de testare email (opțional)
+// Endpoint de testare rapidă pentru trimitere email
 app.post('/test-email', async (req, res) => {
   try {
-    const payload = {
-      numeFirma: "Skyward Flow",
-      emailDestinatar: "skywardflow@gmail.com",
-      clientName: "Andrei Popescu",
-      clientEmail: "andreipopescu@gmail.com",
-      clientRequest: "Sunt interesat de serviciile voastre pentru vizualizări 3D."
-    };
-
     await trimiteEmailIMM({
-      numeFirma: payload.numeFirma,
-      emailDestinatar: payload.emailDestinatar,
-      clientName: payload.clientName,
-      clientEmail: payload.clientEmail,
-      clientRequest: payload.clientRequest
+      numeFirma: "Vand Mere.SRL",
+      emailDestinatar: "skywardflow@gmail.com",
+      clientName: "Cumpar Mere.SRL",
+      clientRequest: "Suntem interesați de oferta dumneavoastră."
     });
 
-    res.status(200).json({ success: true, message: "Email de test trimis cu lead realistic" });
+    res.status(200).json({ success: true, message: "Email de test trimis cu succes!" });
   } catch (err) {
     console.error('❌ Eroare test email:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
+// Endpointul principal care procesează leaduri
+app.post('/genereaza', async (req, res) => {
+  const { firma, lead } = req.body;
+
+  if (!firma || !lead) {
+    return res.status(400).json({ success: false, message: "Lipsesc datele necesare." });
+  }
+
+  try {
+    // Trimitem email IMM-ului
+    await trimiteEmailIMM({
+      numeFirma: firma.inputNumeFirma,
+      emailDestinatar: firma.inputEmailFirma,
+      clientName: lead.clientNameText,
+      clientRequest: lead.clientRequestText
+    });
+
+    // Dacă switch-ul este activ, trimitem și email Clientului
+    if (firma.contactAutomat) {
+      await trimiteEmailIMM({
+        numeFirma: firma.inputNumeFirma,
+        emailDestinatar: lead.clientEmailText,
+        clientName: firma.inputNumeFirma,
+        clientRequest: lead.clientRequestText
+      });
+    }
+
+    res.status(200).json({ success: true, message: "Emailuri trimise cu succes!" });
+  } catch (err) {
+    console.error('❌ Eroare trimitere emailuri:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.listen(PORT, () => {
-  console.log(`🚀 Serverul rulează pe portul ${PORT}`);
+  console.log(`🚀 Server pornit pe portul ${PORT}`);
 });
