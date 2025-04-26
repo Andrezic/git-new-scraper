@@ -6,32 +6,33 @@ const MAILERSEND_URL = "https://api.mailersend.com/v1/email";
 async function trimiteEmailIMM({ numeFirma, emailDestinatar, clientName, clientEmail, clientRequest }) {
   try {
     const response = await fetch(MAILERSEND_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${MAILERSEND_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        from: {
-          email: "noreply@skywardflow.com",
-          name: "Skyward Flow"
-        },
-        to: [{
-          email: emailDestinatar,
-          name: numeFirma
-        }],
-        template_id: "0r83ql3mj2zgzw1j",
-        personalizations: [{
-          to: [{ email: emailDestinatar }],
-          dynamic_template_data: {
-            clientName: clientName,
-            clientEmail: clientEmail,
-            clientRequest: clientRequest,
-            numeFirma: numeFirma
-          }
-        }]
-      })
-    });
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${MAILERSEND_API_KEY}`,
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    from: {
+      email: "noreply@skywardflow.com",
+      name: "Skyward Flow"
+    },
+    to: [{
+      email: emailDestinatar,
+      name: numeFirma
+    }],
+    template_id: "0r83ql3mj2zgzw1j",
+    subject: "✅ Skyward Flow: Ai un nou Business Match pentru firma ta! 🚀", // <-- Subiect adăugat aici
+    personalizations: [{
+      to: [{ email: emailDestinatar }],
+      dynamic_template_data: {
+        numeFirma: numeFirma,
+        clientName: clientName,
+        account_name: "Skyward Flow",
+        clientRequest: clientRequest
+      }
+    }]
+  })
+});
 
     if (!response.ok) {
       const errorBody = await response.text();
