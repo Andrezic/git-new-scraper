@@ -6,33 +6,29 @@ const MAILERSEND_URL = "https://api.mailersend.com/v1/email";
 async function trimiteEmailIMM({ numeFirma, emailDestinatar, clientName, clientEmail, clientRequest }) {
   try {
     const response = await fetch(MAILERSEND_URL, {
-  method: "POST",
-  headers: {
-    Authorization: `Bearer ${MAILERSEND_API_KEY}`,
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    from: {
-      email: "noreply@skywardflow.com",
-      name: "Skyward Flow"
-    },
-    to: [{
-      email: emailDestinatar,
-      name: numeFirma
-    }],
-    template_id: "0r83ql3mj2zgzw1j",
-    subject: "✅ Skyward Flow: Ai un nou Business Match pentru firma ta! 🚀", // <-- Subiect adăugat aici
-    personalizations: [{
-      to: [{ email: emailDestinatar }],
-      dynamic_template_data: {
-        numeFirma: numeFirma,
-        clientName: clientName,
-        account_name: "Skyward Flow",
-        clientRequest: clientRequest
-      }
-    }]
-  })
-});
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${MAILERSEND_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        from: {
+          email: "noreply@skywardflow.com",
+          name: "Skyward Flow"
+        },
+        template_id: "TEMPLATE_ID_DE_LA_TINE",
+        personalizations: [{
+          to: [{ email: emailDestinatar }],
+          subject: "✅ Skyward Flow: Ai un nou Business Match pentru firma ta! 🚀",  // <-- subject aici
+          dynamic_template_data: {
+            numeFirma: numeFirma,
+            clientName: clientName,
+            account_name: "Skyward Flow",
+            clientRequest: clientRequest
+          }
+        }]
+      })
+    });
 
     if (!response.ok) {
       const errorBody = await response.text();
@@ -40,7 +36,7 @@ async function trimiteEmailIMM({ numeFirma, emailDestinatar, clientName, clientE
       throw new Error(`MailerSend API error: ${response.status}`);
     }
 
-    console.log("✅ Email trimis cu succes prin MailerSend Template!");
+    console.log("✅ Email trimis cu succes prin MailerSend Template + Subject!");
     return { success: true };
   } catch (error) {
     console.error("❌ Eroare trimitere email:", error.message);
