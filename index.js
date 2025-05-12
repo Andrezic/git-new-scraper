@@ -3,7 +3,7 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const { trimiteEmailIMM } = require('./backend/mailersend');
+const { trimiteEmailIMM } = require('./backend/emailService');
 require('dotenv').config();
 
 const app = express();
