@@ -3,7 +3,7 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const { trimiteEmailIMM } = require('./backend/emailService');
+const { trimiteEmailIMM } = require('./backend/mailersend');
 require('dotenv').config();
 
 const app = express();
@@ -43,7 +43,7 @@ app.post('/genereaza', async (req, res) => {
       numeFirma: firma.inputNumeFirma,
       emailDestinatar: firma.inputEmailFirma,
       clientName: lead.clientNameText,
-      clientRequest: lead.clientRequestText
+      mesagetoClient: lead.mesajCatreClientText
     });
 
     // Dacă switch-ul este activ, trimitem și email Clientului
@@ -52,7 +52,7 @@ app.post('/genereaza', async (req, res) => {
         numeFirma: firma.inputNumeFirma,
         emailDestinatar: lead.clientEmailText,
         clientName: firma.inputNumeFirma,
-        clientRequest: lead.clientRequestText
+        mesagetoClient: lead.mesajCatreClientText
       });
     }
 
