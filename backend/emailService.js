@@ -3,7 +3,7 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
 const MAILERSEND_API_KEY = process.env.MAILERSEND_API_KEY;
 const MAILERSEND_URL = "https://api.mailersend.com/v1/email";
 
-async function trimiteEmailIMM({ inputNumeFirma, inputEmailDestinatar, inputNumeFirma, mesajCatreClientText }) {
+async function trimiteEmailIMM({ NumeFirma, EmailDestinatar, NumeFirma, mesajCatreClient }) {
   try {
     const payload = {
       from: {
@@ -22,9 +22,9 @@ async function trimiteEmailIMM({ inputNumeFirma, inputEmailDestinatar, inputNume
         {
           email: emailDestinatar,
           substitutions: [
-            { var: "inputNumeFirma", value: inputNumeFirma },
-            { var: "inputEmailFirma", value: inputEmailFirma },
-            { var: "mesajCatreClientText", value: mesajCatreClientText },
+            { var: "NumeFirma", value: inputNumeFirma },
+            { var: "EmailFirma", value: inputEmailFirma },
+            { var: "mesajCatreClient", value: mesajCatreClientText },
             { var: "account_name", value: "Skyward Flow" }
           ]
         }
