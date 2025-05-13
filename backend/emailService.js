@@ -17,14 +17,14 @@ async function trimiteEmailIMM({ numeFirma, emailDestinatar, clientName, clientR
         }
       ],
       subject: "Ai un nou Business Match! 🚀",
-      template_id: "351ndgwkqzrgzqx8", // <-- aici între ghilimele!
+      
       variables: [
         {
           email: emailDestinatar,
           substitutions: [
             { var: "numeFirma", value: numeFirma },
             { var: "clientName", value: clientName },
-            { var: "clientRequest", value: clientRequest },
+            { var: "mesajCatreClient", value: mesajCatreClient },
             { var: "account_name", value: "Skyward Flow" }
           ]
         }

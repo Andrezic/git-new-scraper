@@ -5,7 +5,7 @@ async function testGenereaza() {
     const lead = {
       clientNameText: "TEST LOCAL",
       clientEmailText: "local@test.com",
-      clientRequestText: "Test local",
+      mesajCatreClient: "Test local",
       firmaId: "7e5cf14e-9628-4c3a-9c40-578241acd0c6"
     };
 
