@@ -1,20 +1,20 @@
 // backend/emailService.js
 
-// Dynamic import pentru node-fetch
+// Import dinamic pentru node-fetch
 const fetch = (...args) =>
   import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
-// Cheia din environment
+// Cheia API din environment
 const MAILERSEND_API_KEY = process.env.MAILERSEND_API_KEY;
 const MAILERSEND_URL     = "https://api.mailersend.com/v1/email";
 
 /**
  * Trimite un email prin MailerSend
  * @param {{
- *   NumeFirma?: string,
- *   EmailDestinatar?: string,
- *   EmailFirma?: string,
- *   mesajCatreClient?: string
+ *   NumeFirma: string,
+ *   EmailDestinatar: string,
+ *   EmailFirma: string,
+ *   mesajCatreClient: string
  * }} params
  */
 async function trimiteEmailIMM({
@@ -24,7 +24,7 @@ async function trimiteEmailIMM({
   mesajCatreClient = ""
 }) {
   try {
-    // Construiesc HTML-ul emailului (mesajCatreClient are acum valoare string ne-nulă)
+    // Construim corpul de email în HTML
     const htmlBody = `
       <h2>Ai un nou Business Match! 🚀</h2>
       <p><strong>Firmă:</strong> ${NumeFirma}</p>
