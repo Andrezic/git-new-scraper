@@ -1,9 +1,10 @@
 // backend/emailService.js
 
-// În Node.js importăm node-fetch dinamic
+// Dynamic import pentru node-fetch
 const fetch = (...args) =>
   import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
+// Cheia din environment
 const MAILERSEND_API_KEY = process.env.MAILERSEND_API_KEY;
 const MAILERSEND_URL     = "https://api.mailersend.com/v1/email";
 
@@ -23,10 +24,10 @@ async function trimiteEmailIMM({
   mesajCatreClient
 }) {
   try {
-    // Construim corpul HTML al emailului
+    // Construiesc HTML-ul emailului
     const htmlBody = `
       <h2>Ai un nou Business Match! 🚀</h2>
-      <p><strong>Firma:</strong> ${NumeFirma}</p>
+      <p><strong>Firmă:</strong> ${NumeFirma}</p>
       <p><strong>Email firmă:</strong> ${EmailFirma}</p>
       <hr/>
       <p>${mesajCatreClient.replace(/\n/g, '<br/>')}</p>
@@ -57,8 +58,8 @@ async function trimiteEmailIMM({
     });
 
     if (!response.ok) {
-      const errorBody = await response.text();
-      console.error("❌ Eroare MailerSend:", errorBody);
+      const errorText = await response.text();
+      console.error("❌ Eroare MailerSend:", errorText);
       throw new Error(`MailerSend API error: ${response.status}`);
     }
 
