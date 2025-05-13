@@ -11,20 +11,20 @@ const MAILERSEND_URL     = "https://api.mailersend.com/v1/email";
 /**
  * Trimite un email prin MailerSend
  * @param {{
- *   NumeFirma: string,
- *   EmailDestinatar: string,
- *   EmailFirma: string,
- *   mesajCatreClient: string
+ *   NumeFirma?: string,
+ *   EmailDestinatar?: string,
+ *   EmailFirma?: string,
+ *   mesajCatreClient?: string
  * }} params
  */
 async function trimiteEmailIMM({
-  NumeFirma,
-  EmailDestinatar,
-  EmailFirma,
-  mesajCatreClient
+  NumeFirma = "",
+  EmailDestinatar = "",
+  EmailFirma = "",
+  mesajCatreClient = ""
 }) {
   try {
-    // Construiesc HTML-ul emailului
+    // Construiesc HTML-ul emailului (mesajCatreClient are acum valoare string ne-nulă)
     const htmlBody = `
       <h2>Ai un nou Business Match! 🚀</h2>
       <p><strong>Firmă:</strong> ${NumeFirma}</p>
