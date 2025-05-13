@@ -38,9 +38,9 @@ app.post('/genereaza', async (req, res) => {
     // TODO: înlocuieşte stub-ul de mai jos cu un fetch real din baza ta de date,
     // pe baza lead.firmaId (are proprietatea firmaId din scraper.js) :contentReference[oaicite:2]{index=2}:contentReference[oaicite:3]{index=3}
     firma = {
-      inputNumeFirma:  process.env.DEFAULT_NUME_FIRMA  || '',
-      inputEmailFirma: process.env.DEFAULT_EMAIL_FIRMA || '',
-      contactAutomat:  process.env.DEFAULT_CONTACT_AUTOMAT === 'true'
+      inputNumeFirma:            firma.inputNumeFirma,
+      inputEmailFirma:           firma.inputEmailFirma,
+      mesajCatreClientText:      firma.mesajCatreClientText
     };
   }
 
