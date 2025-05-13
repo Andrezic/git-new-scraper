@@ -14,6 +14,7 @@ async function launchBrowser() {
 
   const lead = {
     clientNameText: "Client Test Automat",
+    inputNumeFirma: "Flow Sky",
     clientEmailText: "client@testmail.com",
     mesajCatreClientText: "Cerere automată pentru test",
     firmaId: firmaId
