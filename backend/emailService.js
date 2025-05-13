@@ -3,7 +3,7 @@ const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fet
 const MAILERSEND_API_KEY = process.env.MAILERSEND_API_KEY;
 const MAILERSEND_URL = "https://api.mailersend.com/v1/email";
 
-async function trimiteEmailIMM({ numeFirma, inputEmailDestinatar, inputNumeFirma, mesajCatreClientText }) {
+async function trimiteEmailIMM({ inputNumeFirma, inputEmailDestinatar, inputNumeFirma, mesajCatreClientText }) {
   try {
     const payload = {
       from: {
