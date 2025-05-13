@@ -28,36 +28,37 @@ app.post('/test-email', async (req, res) => {
   }
 });
 
-// Endpointul principal, adaptat la ce trimite scraper.js :contentReference[oaicite:0]{index=0}:contentReference[oaicite:1]{index=1}
+// Endpointul principal, adaptat la ce trimite scraper.js
 app.post('/genereaza', async (req, res) => {
   let { firma, lead } = req.body;
 
-  // Daca nu e wrapper, tratăm direct req.body ca lead
+  // Dacă nu există obiectul firma în payload, primim direct lead
   if (!firma && req.body.clientNameText) {
     lead = req.body;
-    // TODO: înlocuieşte stub-ul de mai jos cu un fetch real din baza ta de date,
-    // pe baza lead.firmaId (are proprietatea firmaId din scraper.js) :contentReference[oaicite:2]{index=2}:contentReference[oaicite:3]{index=3}
+    // Stub: date implicite pentru firma (înlocuiește cu fetch DB când e gata)
     firma = {
-      inputNumeFirma:            firma.inputNumeFirma,
-      inputEmailFirma:           firma.inputEmailFirma,
-      mesajCatreClientText:      firma.mesajCatreClientText
+      inputNumeFirma:  process.env.DEFAULT_NUME_FIRMA  || '',
+      inputEmailFirma: process.env.DEFAULT_EMAIL_FIRMA || '',
+      contactAutomat:  process.env.DEFAULT_CONTACT_AUTOMAT === 'true'
     };
   }
 
-  // validări
+  // Validări
   if (!firma || !lead) {
-    return res
-      .status(400)
-      .json({ success: false, message: 'Lipsesc datele necesare (firma sau lead).' });
+    return res.status(400).json({
+      success: false,
+      message: 'Lipsesc datele necesare (firma sau lead).'
+    });
   }
   if (!lead.clientNameText || !lead.clientEmailText || !lead.mesajCatreClientText) {
-    return res
-      .status(400)
-      .json({ success: false, message: 'Lipsesc datele necesare în lead.' });
+    return res.status(400).json({
+      success: false,
+      message: 'Lipsesc datele necesare în lead.'
+    });
   }
 
   try {
-    // trimit email IMM-ului
+    // Trimite email către firma ta
     await trimiteEmailIMM({
       numeFirma:       firma.inputNumeFirma,
       emailDestinatar: firma.inputEmailFirma,
@@ -65,7 +66,7 @@ app.post('/genereaza', async (req, res) => {
       clientRequest:   lead.mesajCatreClientText
     });
 
-    // dacă e activ switch-ul, trimitem şi clientului
+    // Dacă e activ switch-ul, trimitem și clientului
     if (firma.contactAutomat) {
       await trimiteEmailIMM({
         numeFirma:       firma.inputNumeFirma,
