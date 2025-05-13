@@ -1,10 +1,11 @@
 // backend/emailService.js
 
-// Dynamic import pentru node-fetch
+// Dacă folosești Node.js 18+, poți importa direct:
+// import fetch from 'node-fetch';
+// În caz contrar, păstrează dynamic import-ul:
 const fetch = (...args) =>
   import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
-// Cheia API MailerSend (setată ca variabilă de mediu)
 const MAILERSEND_API_KEY = process.env.MAILERSEND_API_KEY;
 const MAILERSEND_URL     = "https://api.mailersend.com/v1/email";
 
@@ -23,18 +24,18 @@ async function trimiteEmailIMM({
   EmailFirma,
   mesajCatreClient
 }) {
-  // Validări minimale
+  // Validare minimală
   if (!EmailDestinatar) {
-    throw new Error("Email destinatar lipsește");
+    throw new Error("Lipsește email-ul destinatarului");
   }
 
-  // Construiesc HTML-ul email-ului
+  // Construim un corp HTML simplu pentru email
   const htmlBody = `
     <h2>Ai un nou Business Match! 🚀</h2>
-    <p><strong>Firmă:</strong> ${NumeFirma || "–"}</p>
-    <p><strong>Email firmă:</strong> ${EmailFirma || "–"}</p>
+    <p><strong>Firmă:</strong> ${NumeFirma || ""}</p>
+    <p><strong>Email firmă:</strong> ${EmailFirma || ""}</p>
     <hr/>
-    <p>${(mesajCatreClient || "").replace(/\n/g, '<br/>')}</p>
+    <p>${(mesajCatreClient || "").replace(/\n/g, "<br/>")}</p>
   `;
 
   const payload = {
@@ -45,7 +46,7 @@ async function trimiteEmailIMM({
     to: [
       {
         email: EmailDestinatar,
-        name:  NumeFirma
+        name:  NumeFirma || ""
       }
     ],
     subject: "Ai un nou Business Match! 🚀",
@@ -56,7 +57,7 @@ async function trimiteEmailIMM({
     method:  "POST",
     headers: {
       Authorization: `Bearer ${MAILERSEND_API_KEY}`,
-      "Content-Type": "application/json"
+      "Content-Type":  "application/json"
     },
     body: JSON.stringify(payload)
   });
