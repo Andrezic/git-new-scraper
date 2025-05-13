@@ -28,14 +28,17 @@ app.post('/test-email', async (req, res) => {
   }
 });
 
-// Endpointul principal, adaptat la ce trimite scraper.js
+// Endpointul principal care generează și trimite emailuri
 app.post('/genereaza', async (req, res) => {
   let { firma, lead } = req.body;
 
-  // Dacă nu există obiectul firma în payload, primim direct lead
-  if (!firma && req.body.clientNameText) {
+  // Dacă nu există wrapper 'lead' și payload este direct lead (din scraper.js)
+  if (!lead && req.body.clientNameText) {
     lead = req.body;
-    // Stub: date implicite pentru firma (înlocuiește cu fetch DB când e gata)
+  }
+
+  // Stub firma dacă lipsește, până la implementarea fetch-ului din DB în Wix
+  if (!firma) {
     firma = {
       inputNumeFirma:  process.env.DEFAULT_NUME_FIRMA  || '',
       inputEmailFirma: process.env.DEFAULT_EMAIL_FIRMA || '',
@@ -43,13 +46,7 @@ app.post('/genereaza', async (req, res) => {
     };
   }
 
-  // Validări
-  if (!firma || !lead) {
-    return res.status(400).json({
-      success: false,
-      message: 'Lipsesc datele necesare (firma sau lead).'
-    });
-  }
+  // Validări obligatorii
   if (!lead.clientNameText || !lead.clientEmailText || !lead.mesajCatreClientText) {
     return res.status(400).json({
       success: false,
@@ -58,7 +55,7 @@ app.post('/genereaza', async (req, res) => {
   }
 
   try {
-    // Trimite email către firma ta
+    // Trimite email către compania ta
     await trimiteEmailIMM({
       numeFirma:       firma.inputNumeFirma,
       emailDestinatar: firma.inputEmailFirma,
@@ -66,7 +63,7 @@ app.post('/genereaza', async (req, res) => {
       clientRequest:   lead.mesajCatreClientText
     });
 
-    // Dacă e activ switch-ul, trimitem și clientului
+    // Dacă e setat, trimite și clientului
     if (firma.contactAutomat) {
       await trimiteEmailIMM({
         numeFirma:       firma.inputNumeFirma,
@@ -76,10 +73,10 @@ app.post('/genereaza', async (req, res) => {
       });
     }
 
-    res.status(200).json({ success: true, message: 'Emailuri trimise cu succes!' });
+    return res.status(200).json({ success: true, message: 'Emailuri trimise cu succes!' });
   } catch (err) {
     console.error('❌ Eroare trimitere emailuri:', err);
-    res.status(500).json({ success: false, error: err.message });
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 
