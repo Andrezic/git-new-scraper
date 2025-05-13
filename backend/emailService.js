@@ -1,14 +1,21 @@
 // backend/emailService.js
 
+// Folosim dynamic import pentru node-fetch
 const fetch = (...args) =>
   import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
+// Cheia ta MailerSend din environment
 const MAILERSEND_API_KEY = process.env.MAILERSEND_API_KEY;
 const MAILERSEND_URL     = "https://api.mailersend.com/v1/email";
 
 /**
  * Trimite un email prin MailerSend folosind template
- * @param {{ NumeFirma: string, EmailDestinatar: string, EmailFirma: string, mesajCatreClient: string }} params
+ * @param {{
+ *   NumeFirma: string,
+ *   EmailDestinatar: string,
+ *   EmailFirma: string,
+ *   mesajCatreClient: string
+ * }} params
  */
 async function trimiteEmailIMM({
   NumeFirma,
