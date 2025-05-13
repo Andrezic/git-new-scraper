@@ -19,7 +19,7 @@ app.post('/test-email', async (req, res) => {
       numeFirma: "Vand Mere.SRL",
       emailDestinatar: "skywardflow@gmail.com",
       clientName: "Cumpar Mere.SRL",
-      clientRequest: "Suntem interesați de oferta dumneavoastră."
+      mesajCatreClientText: "Suntem interesați de oferta dumneavoastră."
     });
 
     res.status(200).json({ success: true, message: "Email de test trimis cu succes!" });
@@ -43,7 +43,7 @@ app.post('/genereaza', async (req, res) => {
       numeFirma: firma.inputNumeFirma,
       emailDestinatar: firma.inputEmailFirma,
       clientName: lead.clientNameText,
-      mesagetoClient: lead.mesajCatreClientText
+      clientRequest: lead.mesajCatreClientText
     });
 
     // Dacă switch-ul este activ, trimitem și email Clientului
@@ -52,7 +52,7 @@ app.post('/genereaza', async (req, res) => {
         numeFirma: firma.inputNumeFirma,
         emailDestinatar: lead.clientEmailText,
         clientName: firma.inputNumeFirma,
-        mesagetoClient: lead.mesajCatreClientText
+        clientRequest: lead.mesajCatreClientText
       });
     }
 
