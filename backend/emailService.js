@@ -1,38 +1,49 @@
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+// backend/emailService.js
+
+const fetch = (...args) =>
+  import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 const MAILERSEND_API_KEY = process.env.MAILERSEND_API_KEY;
-const MAILERSEND_URL = "https://api.mailersend.com/v1/email";
+const MAILERSEND_URL     = "https://api.mailersend.com/v1/email";
 
-async function trimiteEmailIMM({ NumeFirma, EmailDestinatar, EmailFirma, NumeFirma, mesajCatreClient }) {
+/**
+ * Trimite un email prin MailerSend folosind template
+ * @param {{ NumeFirma: string, EmailDestinatar: string, EmailFirma: string, mesajCatreClient: string }} params
+ */
+async function trimiteEmailIMM({
+  NumeFirma,
+  EmailDestinatar,
+  EmailFirma,
+  mesajCatreClient
+}) {
   try {
     const payload = {
       from: {
         email: "noreply@skywardflow.com",
-        name: "Skyward Flow"
+        name:  "Skyward Flow"
       },
       to: [
         {
-          email: inputEmailDestinatar,
-          name: inputEmailFirma
+          email: EmailDestinatar,
+          name:  NumeFirma
         }
       ],
       subject: "Ai un nou Business Match! 🚀",
-      
       variables: [
         {
-          email: emailDestinatar,
+          email: EmailDestinatar,
           substitutions: [
-            { var: "NumeFirma", value: inputNumeFirma },
-            { var: "EmailFirma", value: inputEmailFirma },
-            { var: "mesajCatreClient", value: mesajCatreClientText },
-            { var: "account_name", value: "Skyward Flow" }
+            { var: "NumeFirma",        value: NumeFirma },
+            { var: "EmailFirma",       value: EmailFirma },
+            { var: "mesajCatreClient", value: mesajCatreClient },
+            { var: "account_name",     value: "Skyward Flow" }
           ]
         }
       ]
     };
 
     const response = await fetch(MAILERSEND_URL, {
-      method: "POST",
+      method:  "POST",
       headers: {
         Authorization: `Bearer ${MAILERSEND_API_KEY}`,
         "Content-Type": "application/json"
