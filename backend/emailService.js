@@ -1,10 +1,10 @@
 // backend/emailService.js
 
-// Dynamic import pentru node-fetch (compatibil Node.js <18)
+// Dynamic import pentru node-fetch (compatibil cu Node.js <18)
 const fetch = (...args) =>
   import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
-// Cheia API MailerSend setată ca variabilă de mediu
+// Cheia API MailerSend, setată în fișierul .env
 const MAILERSEND_API_KEY = process.env.MAILERSEND_API_KEY;
 const MAILERSEND_URL     = 'https://api.mailersend.com/v1/email';
 
