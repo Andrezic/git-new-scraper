@@ -19,7 +19,7 @@ app.post('/test-email', async (req, res) => {
       numeFirma: "Vand Mere.SRL",
       emailDestinatar: "skywardflow@gmail.com",
       clientName: "Cumpar Mere.SRL",
-      mesajCatreClientText: "Suntem interesați de oferta dumneavoastră."
+      clientRequest: "Suntem interesați de oferta dumneavoastră."
     });
 
     res.status(200).json({ success: true, message: "Email de test trimis cu succes!" });
