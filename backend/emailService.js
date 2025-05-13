@@ -1,74 +1,73 @@
 // backend/emailService.js
 
-// Dacă folosești Node.js 18+, poți importa direct:
-// import fetch from 'node-fetch';
-// În caz contrar, păstrează dynamic import-ul:
+// Dynamic import pentru node-fetch (compatibil Node.js <18)
 const fetch = (...args) =>
   import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
+// Cheia API MailerSend setată ca variabilă de mediu
 const MAILERSEND_API_KEY = process.env.MAILERSEND_API_KEY;
-const MAILERSEND_URL     = "https://api.mailersend.com/v1/email";
+const MAILERSEND_URL     = 'https://api.mailersend.com/v1/email';
 
 /**
  * Trimite un email prin MailerSend
  * @param {{
- *   NumeFirma: string,
- *   EmailDestinatar: string,
- *   EmailFirma: string,
- *   mesajCatreClient: string
+ *   numeFirma: string,
+ *   emailDestinatar: string,
+ *   clientName: string,
+ *   clientRequest: string
  * }} params
  */
 async function trimiteEmailIMM({
-  NumeFirma,
-  EmailDestinatar,
-  EmailFirma,
-  mesajCatreClient
+  numeFirma = '',
+  emailDestinatar = '',
+  clientName = '',
+  clientRequest = ''
 }) {
   // Validare minimală
-  if (!EmailDestinatar) {
-    throw new Error("Lipsește email-ul destinatarului");
+  if (!emailDestinatar) {
+    throw new Error('Lipsește email-ul destinatarului');
   }
 
-  // Construim un corp HTML simplu pentru email
+  // Construim corpul email-ului în HTML
   const htmlBody = `
     <h2>Ai un nou Business Match! 🚀</h2>
-    <p><strong>Firmă:</strong> ${NumeFirma || ""}</p>
-    <p><strong>Email firmă:</strong> ${EmailFirma || ""}</p>
+    <p><strong>Firmă:</strong> ${numeFirma}</p>
+    <p><strong>Client:</strong> ${clientName}</p>
     <hr/>
-    <p>${(mesajCatreClient || "").replace(/\n/g, "<br/>")}</p>
+    <p>${clientRequest.replace(/\n/g, '<br/>')}</p>
   `;
 
   const payload = {
     from: {
-      email: "noreply@skywardflow.com",
-      name:  "Skyward Flow"
+      email: 'noreply@skywardflow.com',
+      name:  'Skyward Flow'
     },
     to: [
       {
-        email: EmailDestinatar,
-        name:  NumeFirma || ""
+        email: emailDestinatar,
+        name:  clientName
       }
     ],
-    subject: "Ai un nou Business Match! 🚀",
+    subject: 'Ai un nou Business Match! 🚀',
     html:    htmlBody
   };
 
   const response = await fetch(MAILERSEND_URL, {
-    method:  "POST",
+    method:  'POST',
     headers: {
       Authorization: `Bearer ${MAILERSEND_API_KEY}`,
-      "Content-Type":  "application/json"
+      'Content-Type': 'application/json'
     },
     body: JSON.stringify(payload)
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error("❌ Eroare MailerSend:", errorText);
+    console.error('❌ Eroare MailerSend:', errorText);
     throw new Error(`MailerSend API error: ${response.status}`);
   }
 
-  console.log("✅ Email trimis cu succes prin MailerSend!");
+  console.log('✅ Email trimis cu succes prin MailerSend!');
   return { success: true };
 }
 
