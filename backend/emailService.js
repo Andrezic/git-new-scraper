@@ -1,15 +1,14 @@
 // backend/emailService.js
 
-// Folosim dynamic import pentru node-fetch
+// În Node.js importăm node-fetch dinamic
 const fetch = (...args) =>
   import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
-// Cheia ta MailerSend din environment
 const MAILERSEND_API_KEY = process.env.MAILERSEND_API_KEY;
 const MAILERSEND_URL     = "https://api.mailersend.com/v1/email";
 
 /**
- * Trimite un email prin MailerSend folosind template
+ * Trimite un email prin MailerSend
  * @param {{
  *   NumeFirma: string,
  *   EmailDestinatar: string,
@@ -24,6 +23,15 @@ async function trimiteEmailIMM({
   mesajCatreClient
 }) {
   try {
+    // Construim corpul HTML al emailului
+    const htmlBody = `
+      <h2>Ai un nou Business Match! 🚀</h2>
+      <p><strong>Firma:</strong> ${NumeFirma}</p>
+      <p><strong>Email firmă:</strong> ${EmailFirma}</p>
+      <hr/>
+      <p>${mesajCatreClient.replace(/\n/g, '<br/>')}</p>
+    `;
+
     const payload = {
       from: {
         email: "noreply@skywardflow.com",
@@ -36,17 +44,7 @@ async function trimiteEmailIMM({
         }
       ],
       subject: "Ai un nou Business Match! 🚀",
-      variables: [
-        {
-          email: EmailDestinatar,
-          substitutions: [
-            { var: "NumeFirma",        value: NumeFirma },
-            { var: "EmailFirma",       value: EmailFirma },
-            { var: "mesajCatreClient", value: mesajCatreClient },
-            { var: "account_name",     value: "Skyward Flow" }
-          ]
-        }
-      ]
+      html:    htmlBody
     };
 
     const response = await fetch(MAILERSEND_URL, {
@@ -64,8 +62,9 @@ async function trimiteEmailIMM({
       throw new Error(`MailerSend API error: ${response.status}`);
     }
 
-    console.log("✅ Email trimis cu succes prin Template MailerSend!");
+    console.log("✅ Email trimis cu succes prin MailerSend!");
     return { success: true };
+
   } catch (error) {
     console.error("❌ Eroare trimitere email:", error.message);
     return { success: false, error: error.message };
