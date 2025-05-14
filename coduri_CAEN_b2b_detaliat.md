@@ -148,12 +148,3 @@
 | **8230** | Activități de organizare a expozițiilor, târgurilor și congreselor | 5510, 5520, 5530, 5590, 5610, 5621, 5629, 5630, 7311, 7312, 7410, 7420, 7490, 7911, 7912, 7990, 8211, 8219, 8220, 8291, 8292, 8299 |
 | **8299** | Alte activități de servicii suport pentru întreprinderi n.c.a. | 6910, 6920, 7010, 7021, 7022, 7311, 7312, 7490, 8211, 8219, 8220, 8230, 8291, 8292 |
 
-## Note importante
-
-1. Această listă nu este exhaustivă, ci reprezintă relațiile B2B cele mai frecvente și logice.
-2. Compatibilitatea efectivă depinde de natura exactă a afacerii și de modul specific în care activitățile vor fi desfășurate.
-3. Pentru activități specifice sau mai detaliate, se recomandă consultarea unui specialist fiscal sau juridic.
-4. Anumite combinații de coduri CAEN pot necesita autorizații sau aprobări speciale din partea autorităților competente.
-5. Legislația se poate modifica, așadar este important să verificați informațiile actualizate la momentul înființării sau modificării societății.
-6. În cazul activităților reglementate, pot exista restricții suplimentare care să limiteze compatibilitatea B2B între anumite coduri CAEN.
-7. Societățile nou înființate pot avea maxim 5 coduri CAEN, astfel încât este importantă selectarea celor mai relevante.
