@@ -37,14 +37,12 @@ async function launchBrowser() {
     console.log(`🚀 Navighez la ${pageUrl} via proxy ${process.env.DATAIMPULSE_PROXY}`);
     await page.goto(pageUrl, { waitUntil: 'networkidle2', timeout: 60000 });
 
-    // Extragerea lead-ului
+    // Extragerea datelor: separate firma și client
     const lead = await page.evaluate((fid) => ({
-      clientNameText:        document.querySelector('#clientNameText')?.value || '',
-      clientEmailText:       document.querySelector('#clientEmailText')?.value || '',
-      clientTelefonText:     document.querySelector('#clientTelefonText')?.value || '',
-      inputTelefonFirma:     document.querySelector('#inputTelefonFirma')?.value || '',
-      inputEmailFirma:       document.querySelector('#inputEmailFirma')?.value || '',
-      inputNumeFirma:        document.querySelector('#inputNumeFirma')?.value || '',
+      // Datele firmei (utilizatorului)
+      firmaName:             document.querySelector('#inputNumeFirma')?.value || '',
+      firmaEmail:            document.querySelector('#inputEmailFirma')?.value || '',
+      firmaTelefon:          document.querySelector('#inputTelefonFirma')?.value || '',
       inputWebsiteFirma:     document.querySelector('#inputWebsiteFirma')?.value || '',
       inputServicii:         document.querySelector('#inputServicii')?.value || '',
       inputAvantaje:         document.querySelector('#inputAvantaje')?.value || '',
@@ -60,6 +58,12 @@ async function launchBrowser() {
       inputTintireGeo:       document.querySelector('#inputTintireGeo')?.value || '',
       inputLocalizare:       document.querySelector('#inputLocalizare')?.value || '',
       inputDescriere:        document.querySelector('#inputDescriere')?.value || '',
+
+    // Datele clientului (lead-ului)
+      clientNameText:  document.querySelector('#clientNameText')?.value || '',
+      clientEmailText: document.querySelector('#clientEmailText')?.value || '',
+      clientTelefonText: document.querySelector('#clientTelefonText')?.value || '',
+
       firmaId:               fid
     }), firmaId);
 
