@@ -24,7 +24,7 @@ async function launchBrowser() {
     password: process.env.DATAIMPULSE_PASSWORD
   });
 
-  const url = `https://your-site.com/formular-scraper?firmaId=${firmaId}`;
+  const url = `https://www.skywardflow.com/formular-scraper?firmaId=${firmaId}`;
   await page.goto(url, { waitUntil: 'networkidle2' });
 
   // Extragem toate câmpurile
