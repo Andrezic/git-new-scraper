@@ -2,12 +2,9 @@
 require('dotenv').config();
 const puppeteer = require('puppeteer-core');
 const axios = require('axios');
-const apiUrl = process.env.API_BASE_URL || 'http://localhost:3000';
-
-await axios.post(`${apiUrl}/genereaza`, { lead }, …);
 
 /**
- * Pornim Puppeteer cu proxy Dataimpulse și autentificare separată.
+ * Pornește Puppeteer cu proxy Dataimpulse și autentificare
  */
 async function launchBrowser() {
   return puppeteer.launch({
@@ -23,24 +20,25 @@ async function launchBrowser() {
 
 (async () => {
   const firmaId = '7e5cf14e-9628-4c3a-9c40-578241acd0c6';
-  const url = `https://www.skywardflow.com/formular-scraper?firmaId=${firmaId}`;
+  const pageUrl = `https://www.skywardflow.com/formular-scraper?firmaId=${firmaId}`;
+  const apiUrl = process.env.API_BASE_URL || 'http://localhost:3000';
 
   let browser;
   try {
     browser = await launchBrowser();
     const page = await browser.newPage();
 
-    // Autentificare pentru proxy Dataimpulse
+    // Autentificare proxy
     await page.authenticate({
       username: process.env.DATAIMPULSE_USER,
       password: process.env.DATAIMPULSE_PASSWORD
     });
 
-    console.log(`🚀 Navighez la ${url} via proxy ${process.env.DATAIMPULSE_PROXY}`);
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
+    console.log(`🚀 Navighez la ${pageUrl} via proxy ${process.env.DATAIMPULSE_PROXY}`);
+    await page.goto(pageUrl, { waitUntil: 'networkidle2', timeout: 60000 });
 
-    // Extragem toate câmpurile din pagină
-    const lead = await page.evaluate((firmaId) => ({
+    // Extragerea lead-ului
+    const lead = await page.evaluate((fid) => ({
       clientNameText:        document.querySelector('#inputNumeFirma')?.value || '',
       clientEmailText:       document.querySelector('#inputEmailFirma')?.value || '',
       clientTelefonText:     document.querySelector('#inputTelefonFirma')?.value || '',
@@ -59,18 +57,17 @@ async function launchBrowser() {
       inputTintireGeo:       document.querySelector('#inputTintireGeo')?.value || '',
       inputLocalizare:       document.querySelector('#inputLocalizare')?.value || '',
       inputDescriere:        document.querySelector('#inputDescriere')?.value || '',
-      firmaId                
-    }));
+      firmaId:               fid
+    }), firmaId);
 
     console.log('✅ Lead pregătit de scraper:', lead);
 
-    // Trimitem datele la backend pentru generare email
+    // Post lead către backend
     const response = await axios.post(
-      'http://localhost:3000/genereaza',
+      `${apiUrl}/genereaza`,
       { lead },
       { headers: { 'Content-Type': 'application/json' } }
     );
-
     console.log('📤 Răspuns de la /genereaza:', response.data);
   } catch (err) {
     console.error('❌ Eroare în scraper:', err.message || err);
