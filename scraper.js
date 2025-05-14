@@ -19,7 +19,7 @@ async function launchBrowser() {
 }
 
 (async () => {
-  const firmaId = '7e5cf14e-9628-4c3a-9c40-578241acd0c6';
+  const firmaId = '7d8a16ea-53e8-4922-858c-ff9b291f16a6';
   const pageUrl = `https://www.skywardflow.com/formular-scraper?firmaId=${firmaId}`;
   const apiUrl = process.env.API_BASE_URL || 'http://localhost:3000';
 
