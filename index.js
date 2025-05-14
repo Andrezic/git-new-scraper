@@ -78,3 +78,7 @@ app.post('/genereaza', async (req, res) => {
     return res.status(500).json({ success: false, error: err.message });
   }
 });
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server online pe portul ${PORT}`);
+});
