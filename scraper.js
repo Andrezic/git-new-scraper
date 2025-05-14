@@ -39,9 +39,12 @@ async function launchBrowser() {
 
     // Extragerea lead-ului
     const lead = await page.evaluate((fid) => ({
-      clientNameText:        document.querySelector('#inputNumeFirma')?.value || '',
-      clientEmailText:       document.querySelector('#inputEmailFirma')?.value || '',
-      clientTelefonText:     document.querySelector('#inputTelefonFirma')?.value || '',
+      clientNameText:        document.querySelector('#clientNameText')?.value || '',
+      clientEmailText:       document.querySelector('#clientEmailText')?.value || '',
+      clientTelefonText:     document.querySelector('#clientTelefonText')?.value || '',
+      inputTelefonFirma:     document.querySelector('#inputTelefonFirma')?.value || '',
+      inputEmailFirma:       document.querySelector('#inputEmailFirma')?.value || '',
+      inputNumeFirma:        document.querySelector('#inputNumeFirma')?.value || '',
       inputWebsiteFirma:     document.querySelector('#inputWebsiteFirma')?.value || '',
       inputServicii:         document.querySelector('#inputServicii')?.value || '',
       inputAvantaje:         document.querySelector('#inputAvantaje')?.value || '',
