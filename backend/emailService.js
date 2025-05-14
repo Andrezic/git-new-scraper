@@ -12,19 +12,19 @@ const MAILERSEND_URL     = 'https://api.mailersend.com/v1/email';
  * Trimite un email prin MailerSend
  * @param {{
  *   numeFirma: string,
- *   emailDestinatar: string,
- *   clientName: string,
- *   clientRequest: string
+ *   clientEmailText: string,
+ *   clientNameText: string,
+ *   mesajCatreClientText: string
  * }} params
  */
 async function trimiteEmailIMM({
   numeFirma = '',
-  emailDestinatar = '',
-  clientName = '',
-  clientRequest = ''
+  clientEmailText = '',
+  clientNameText = '',
+  mesajCatreClientText = ''
 }) {
   // Validare minimală
-  if (!emailDestinatar) {
+  if (!clientEmailText) {
     throw new Error('Lipsește email-ul destinatarului');
   }
 
@@ -32,9 +32,9 @@ async function trimiteEmailIMM({
   const htmlBody = `
     <h2>Ai un nou Business Match! 🚀</h2>
     <p><strong>Firmă:</strong> ${numeFirma}</p>
-    <p><strong>Client:</strong> ${clientName}</p>
+    <p><strong>Client:</strong> ${clientNameText}</p>
     <hr/>
-    <p>${clientRequest.replace(/\n/g, '<br/>')}</p>
+    <p>${mesajCatreClientText.replace(/\n/g, '<br/>')}</p>
   `;
 
   const payload = {
@@ -44,8 +44,8 @@ async function trimiteEmailIMM({
     },
     to: [
       {
-        email: emailDestinatar,
-        name:  clientName
+        email: clientEmailText,
+        name:  clientNameText
       }
     ],
     subject: 'Ai un nou Business Match! 🚀',
