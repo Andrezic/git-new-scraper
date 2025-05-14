@@ -4,22 +4,16 @@ const puppeteer = require('puppeteer-core');
 const axios = require('axios');
 
 /**
- * Pornim Puppeteer cu proxy Dataimpulse cu autentificare în URL.
+ * Pornim Puppeteer cu proxy Dataimpulse și autentificare separată.
  */
 async function launchBrowser() {
-  // Construim URL-ul proxy cu credențiale
-  const proxyAuth = `${process.env.DATAIMPULSE_USER}:${process.env.DATAIMPULSE_PASSWORD}`;
-  const proxyHost = process.env.DATAIMPULSE_PROXY;
-  const proxyUrl = `http://${proxyAuth}@${proxyHost}`;
-  console.log(`🌐 Folosesc proxy Dataimpulse: ${proxyUrl}`);
-
   return puppeteer.launch({
     executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
     headless: true,
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
-      `--proxy-server=${proxyUrl}`
+      `--proxy-server=${process.env.DATAIMPULSE_PROXY}`
     ]
   });
 }
@@ -33,31 +27,36 @@ async function launchBrowser() {
     browser = await launchBrowser();
     const page = await browser.newPage();
 
-    // Navigăm direct, fără autentificare suplimentară (credențialele sunt în proxy URL)
-    console.log(`🚀 Navighez la: ${url}`);
+    // Autentificare pentru proxy Dataimpulse
+    await page.authenticate({
+      username: process.env.DATAIMPULSE_USER,
+      password: process.env.DATAIMPULSE_PASSWORD
+    });
+
+    console.log(`🚀 Navighez la ${url} via proxy ${process.env.DATAIMPULSE_PROXY}`);
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
 
     // Extragem toate câmpurile din pagină
-    const lead = await page.evaluate(() => ({
-      clientNameText:     document.querySelector('#inputNumeFirma')?.value || '',
-      clientEmailText:    document.querySelector('#inputEmailFirma')?.value || '',
-      clientTelefonText:  document.querySelector('#inputTelefonFirma')?.value || '',
-      inputWebsiteFirma:  document.querySelector('#inputWebsiteFirma')?.value || '',
-      inputServicii:      document.querySelector('#inputServicii')?.value || '',
-      inputAvantaje:      document.querySelector('#inputAvantaje')?.value || '',
-      inputPreturi:       document.querySelector('#inputPreturi')?.value || '',
-      inputTipClienti:    document.querySelector('#inputTipClienti')?.value || '',
-      inputCodCaen:       document.querySelector('#inputCodCaen')?.value || '',
-      inputCui:           document.querySelector('#inputCui')?.value || '',
-      numarAngajati:      document.querySelector('#inputNumarAngajati')?.value || '',
-      inputTipColaborare: document.querySelector('#inputTipColaborare')?.value || '',
+    const lead = await page.evaluate((firmaId) => ({
+      clientNameText:        document.querySelector('#inputNumeFirma')?.value || '',
+      clientEmailText:       document.querySelector('#inputEmailFirma')?.value || '',
+      clientTelefonText:     document.querySelector('#inputTelefonFirma')?.value || '',
+      inputWebsiteFirma:     document.querySelector('#inputWebsiteFirma')?.value || '',
+      inputServicii:         document.querySelector('#inputServicii')?.value || '',
+      inputAvantaje:         document.querySelector('#inputAvantaje')?.value || '',
+      inputPreturi:          document.querySelector('#inputPreturi')?.value || '',
+      inputTipClienti:       document.querySelector('#inputTipClienti')?.value || '',
+      inputCodCaen:          document.querySelector('#inputCodCaen')?.value || '',
+      inputCui:              document.querySelector('#inputCui')?.value || '',
+      numarAngajati:         document.querySelector('#inputNumarAngajati')?.value || '',
+      inputTipColaborare:    document.querySelector('#inputTipColaborare')?.value || '',
       inputDimensiuneClient: document.querySelector('#inputDimensiuneClient')?.value || '',
-      inputKeywords:        document.querySelector('#inputKeywords')?.value || '',
-      inputCerinteExtra:    document.querySelector('#inputCerinteExtra')?.value || '',
-      inputTintireGeo:      document.querySelector('#inputTintireGeo')?.value || '',
-      inputLocalizare:      document.querySelector('#inputLocalizare')?.value || '',
-      inputDescriere:       document.querySelector('#inputDescriere')?.value || '',
-      firmaId:              firmaId
+      inputKeywords:         document.querySelector('#inputKeywords')?.value || '',
+      inputCerinteExtra:     document.querySelector('#inputCerinteExtra')?.value || '',
+      inputTintireGeo:       document.querySelector('#inputTintireGeo')?.value || '',
+      inputLocalizare:       document.querySelector('#inputLocalizare')?.value || '',
+      inputDescriere:        document.querySelector('#inputDescriere')?.value || '',
+      firmaId                
     }));
 
     console.log('✅ Lead pregătit de scraper:', lead);
