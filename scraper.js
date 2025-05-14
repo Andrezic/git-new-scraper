@@ -2,6 +2,9 @@
 require('dotenv').config();
 const puppeteer = require('puppeteer-core');
 const axios = require('axios');
+const apiUrl = process.env.API_BASE_URL || 'http://localhost:3000';
+
+await axios.post(`${apiUrl}/genereaza`, { lead }, …);
 
 /**
  * Pornim Puppeteer cu proxy Dataimpulse și autentificare separată.
