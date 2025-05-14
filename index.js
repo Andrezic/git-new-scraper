@@ -4,6 +4,7 @@ const express = require('express');
 const cors    = require('cors');
 const bodyParser = require('body-parser');
 const { trimiteEmailIMM } = require('./backend/emailService');
+const { genereazaTextLead } = require('./utils/openai');
 require('dotenv').config();
 
 const app  = express();
@@ -31,55 +32,49 @@ app.post('/test-email', async (req, res) => {
 // Endpointul principal care generează și trimite emailuri
 app.post('/genereaza', async (req, res) => {
   let { firma, lead } = req.body;
+  if (!lead && req.body.clientNameText) lead = req.body;
 
-  // Dacă nu există wrapper 'lead' și payload este direct lead (din scraper.js)
-  if (!lead && req.body.clientNameText) {
-    lead = req.body;
-  }
-
-  // Stub firma dacă lipsește, până la implementarea fetch-ului din DB în Wix
+  // stub firma dacă lipsește
   if (!firma) {
     firma = {
-      inputNumeFirma:  process.env.DEFAULT_NUME_FIRMA  || '',
-      inputEmailFirma: process.env.DEFAULT_EMAIL_FIRMA || '',
+      inputNumeFirma:  process.env.DEFAULT_NUME_FIRMA,
+      inputEmailFirma: process.env.DEFAULT_EMAIL_FIRMA,
       contactAutomat:  process.env.DEFAULT_CONTACT_AUTOMAT === 'true'
     };
   }
 
-  // Validări obligatorii
-  if (!lead.clientNameText || !lead.clientEmailText || !lead.mesajCatreClientText) {
-    return res.status(400).json({
-      success: false,
-      message: 'Lipsesc datele necesare în lead.'
-    });
+  // validări
+  if (!lead.clientNameText || !lead.clientEmailText) {
+    return res.status(400).json({ success: false, message: 'Lipă date client.' });
   }
 
   try {
-    // Trimite email către compania ta
+    // 1) Generează email AI
+    const emailBody = await genereazaTextLead({
+      ...lead,
+      // + eventual conținut extras de scraper pentru partener
+      // conținutCandidate: lead.scrapedCandidateContent
+    });
+
+    // 2) Trimite emailurile
     await trimiteEmailIMM({
       numeFirma:       firma.inputNumeFirma,
       emailDestinatar: firma.inputEmailFirma,
       clientName:      lead.clientNameText,
-      clientRequest:   lead.mesajCatreClientText
+      clientRequest:   emailBody
     });
-
-    // Dacă e setat, trimite și clientului
     if (firma.contactAutomat) {
       await trimiteEmailIMM({
         numeFirma:       firma.inputNumeFirma,
         emailDestinatar: lead.clientEmailText,
         clientName:      firma.inputNumeFirma,
-        clientRequest:   lead.mesajCatreClientText
+        clientRequest:   emailBody
       });
     }
 
-    return res.status(200).json({ success: true, message: 'Emailuri trimise cu succes!' });
+    return res.status(200).json({ success: true, message: 'Emailuri trimise cu succes!', aiEmail: emailBody });
   } catch (err) {
-    console.error('❌ Eroare trimitere emailuri:', err);
+    console.error('❌ Eroare trimitere:', err);
     return res.status(500).json({ success: false, error: err.message });
   }
-});
-
-app.listen(PORT, () => {
-  console.log(`🚀 Server pornit pe portul ${PORT}`);
 });
