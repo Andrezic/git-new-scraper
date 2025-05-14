@@ -11,14 +11,14 @@ const MAILERSEND_URL     = 'https://api.mailersend.com/v1/email';
 /**
  * Trimite un email prin MailerSend
  * @param {{
- *   numeFirma: string,
+ *   inputNumeFirma: string,
  *   clientEmailText: string,
  *   clientNameText: string,
  *   mesajCatreClientText: string
  * }} params
  */
 async function trimiteEmailIMM({
-  numeFirma = '',
+  inputNumeFirma = '',
   clientEmailText = '',
   clientNameText = '',
   mesajCatreClientText = ''
@@ -31,7 +31,7 @@ async function trimiteEmailIMM({
   // Construim corpul email-ului în HTML
   const htmlBody = `
     <h2>Ai un nou Business Match! 🚀</h2>
-    <p><strong>Firmă:</strong> ${numeFirma}</p>
+    <p><strong>Firmă:</strong> ${inputNumeFirma}</p>
     <p><strong>Client:</strong> ${clientNameText}</p>
     <hr/>
     <p>${mesajCatreClientText.replace(/\n/g, '<br/>')}</p>
