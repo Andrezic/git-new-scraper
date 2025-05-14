@@ -4,7 +4,7 @@ const puppeteer = require('puppeteer-core');
 const axios = require('axios');
 
 /**
- * Lancează Chromium prin Dataimpulse cu autentificare proxy
+ * Lancează un browser headless prin Dataimpulse cu proxy și autentificare.
  */
 async function launchBrowser() {
   return puppeteer.launch({
@@ -19,7 +19,6 @@ async function launchBrowser() {
 }
 
 (async () => {
-  // ID-ul firmei configurat în .env sau default
   const firmaId = process.env.FIRMA_ID || '7d8a16ea-53e8-4922-858c-ff9b291f16a6';
   const pageUrl = `https://www.skywardflow.com/formular-scraper?firmaId=${firmaId}`;
   const apiUrl  = process.env.API_BASE_URL || 'http://localhost:3000';
@@ -38,9 +37,11 @@ async function launchBrowser() {
     console.log(`🚀 Navighez la ${pageUrl}`);
     await page.goto(pageUrl, { waitUntil: 'networkidle2', timeout: 60000 });
 
-    // Extragere date companie din pagina formular-scraper
-    const lead = await page.evaluate((fid) => ({
-      // Date companie (din CMS)
+    // Așteptăm câteva secunde pentru a permite scripturilor Wix să populeze input-urile
+    await page.waitForTimeout(3000);
+
+    // Extragem datele companiei din pagina publică
+    const companyData = await page.evaluate((fid) => ({
       inputNumeFirma:        document.querySelector('#inputNumeFirma')?.value || '',
       inputEmailFirma:       document.querySelector('#inputEmailFirma')?.value || '',
       inputTelefonFirma:     document.querySelector('#inputTelefonFirma')?.value || '',
@@ -62,12 +63,20 @@ async function launchBrowser() {
       firmaId:               fid
     }), firmaId);
 
-    console.log('✅ Lead pregătit (date companie):', lead);
+    // Adăugăm manual câmpurile clientului, necesare backend-ului
+    const lead = {
+      ...companyData,
+      clientNameText:  process.env.TEST_CLIENT_NAME || 'Client Test Automat',
+      clientEmailText: process.env.TEST_CLIENT_EMAIL || 'client@testmail.com',
+      clientTelefonText: process.env.TEST_CLIENT_PHONE || '0712345678'
+    };
 
-    // Trimitere lead la backend pentru generare email și trimitere
+    console.log('✅ Lead final pregătit:', lead);
+
+    // Trimitem obiectul lead direct în corpul cererii, pentru validarea backend-ului
     const response = await axios.post(
-      `${apiUrl}/genereaza`,
-      { lead },
+      apiUrl + '/genereaza',
+      lead,
       { headers: { 'Content-Type': 'application/json' } }
     );
     console.log('📤 Răspuns de la /genereaza:', response.data);
