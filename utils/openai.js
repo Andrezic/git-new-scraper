@@ -6,16 +6,21 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_MODEL = 'gpt-4o';
 
 async function genereazaTextLead(lead) {
+  // Construim prompt-ul cu toate câmpurile relevante
   const prompt = `Ai primit aceste date din formular:
 - Cod CAEN: ${lead.inputCodCaen}
 - CUI: ${lead.inputCui}
-- Nr. angajați: ${lead.inputNumarAngajati}
-… (toate câmpurile) …
+- Nr. angajați: ${lead.numarAngajati}
+- Tip colaborare: ${lead.inputTipColaborare}
+- Dimensiune client: ${lead.inputDimensiuneClient}
+- Keywords: ${lead.inputKeywords}
+- Cerințe extra: ${lead.inputCerinteExtra}
+- Țintire geo: ${lead.inputTintireGeo}
+- Localizare: ${lead.inputLocalizare}
+- Descriere: ${lead.inputDescriere}
+… (alte câmpuri relevante) …
 Pe baza lor, redactează un email B2B profesional.
-  `;
-}
-
-
+`;
 
   try {
     const response = await axios.post(
