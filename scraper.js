@@ -1,12 +1,8 @@
 // scraper.js
-
 require('dotenv').config();
 const puppeteer = require('puppeteer-core');
 const axios     = require('axios');
 
-/**
- * Lancează un browser headless prin Dataimpulse cu proxy și autentificare.
- */
 async function launchBrowser() {
   return puppeteer.launch({
     executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
@@ -22,14 +18,12 @@ async function launchBrowser() {
 ;(async () => {
   const firmaId = process.env.FIRMA_ID || '7d8a16ea-53e8-4922-858c-ff9b291f16a6';
   const pageUrl = `https://www.skywardflow.com/formular-scraper?firmaId=${firmaId}`;
-  const apiUrl  = process.env.API_BASE_URL   || 'http://localhost:3000';
+  const apiUrl  = process.env.API_BASE_URL     || 'http://localhost:3000';
 
   let browser;
   try {
     browser = await launchBrowser();
     const page = await browser.newPage();
-
-    // Autentificare la proxy-ul Dataimpulse
     await page.authenticate({
       username: process.env.DATAIMPULSE_USER,
       password: process.env.DATAIMPULSE_PASSWORD
@@ -37,11 +31,9 @@ async function launchBrowser() {
 
     console.log(`🚀 Navighez la ${pageUrl}`);
     await page.goto(pageUrl, { waitUntil: 'networkidle2', timeout: 60000 });
-
-    // Așteptăm scripturile Wix să încarce DOM-ul
     await page.waitForTimeout(3000);
 
-    // Detectăm un iframe cu formularul (dacă există)
+    // Detectăm iframe-ul cu formular, dacă există
     let frame = page;
     const formFrame = page.frames().find(f => f.url().includes('formular-scraper'));
     if (formFrame) {
@@ -49,51 +41,47 @@ async function launchBrowser() {
       console.log('ℹ️ Folosesc iframe-ul de formular:', formFrame.url());
     }
 
-    // Așteptăm apariția oricărui input sau textarea
+    // Așteptăm orice input sau textarea din DOM-ul formularului
     await frame.waitForSelector('input, textarea', { timeout: 60000 });
 
-    // Extragem valorile celor câmpuri cunoscute, după id sau name
+    // — Pas de debug: listăm toate câmpurile găsite —
+    const debugFields = await frame.evaluate(() => {
+      const els = Array.from(document.querySelectorAll('input, textarea'));
+      return els.map(el => ({
+        tag: el.tagName.toLowerCase(),
+        id: el.id || null,
+        name: el.name || null,
+        placeholder: el.placeholder || null,
+        value: el.value ? el.value.trim() : ''
+      }));
+    });
+    console.log('🔍 Fields detected:', debugFields);
+
+    // — Apoi construim dinamic obiectul companyData —
     const companyData = await frame.evaluate(fid => {
-      const keys = [
-        'inputNumeFirma',
-        'inputEmailFirma',
-        'inputTelefonFirma',
-        'inputWebsiteFirma',
-        'inputServicii',
-        'inputAvantaje',
-        'inputPreturi',
-        'inputTipClienti',
-        'inputCodCaen',
-        'inputCui',
-        'inputNumarAngajati',
-        'inputTipColaborare',
-        'inputDimensiuneClient',
-        'inputKeywords',
-        'inputCerinteExtra',
-        'inputTintireGeo',
-        'inputLocalizare',
-        'inputDescriere',
-      ];
-      const result = {};
-      keys.forEach(key => {
-        const el = document.querySelector(`#${key}`) || document.querySelector(`[name="${key}"]`);
-        result[key] = el?.value?.trim() || '';
+      const els = Array.from(document.querySelectorAll('input, textarea'));
+      const data = {};
+      els.forEach(el => {
+        const key = el.name || el.id;
+        if (key) {
+          data[key] = el.value.trim();
+        }
       });
-      result.firmaId = fid;
-      return result;
+      data.firmaId = fid;
+      return data;
     }, firmaId);
 
-    // Adăugăm câmpurile clientului pentru backend
+    // Adăugăm datele clientului pentru API
     const lead = {
       ...companyData,
-      clientNameText:   process.env.TEST_CLIENT_NAME  || 'Client Test Automat',
-      clientEmailText:  process.env.TEST_CLIENT_EMAIL || 'client@testmail.com',
-      clientTelefonText:process.env.TEST_CLIENT_PHONE || '0712345678'
+      clientNameText:   process.env.TEST_CLIENT_NAME   || 'Client Test Automat',
+      clientEmailText:  process.env.TEST_CLIENT_EMAIL  || 'client@testmail.com',
+      clientTelefonText:process.env.TEST_CLIENT_PHONE  || '0712345678'
     };
 
     console.log('✅ Lead final pregătit:', lead);
 
-    // Trimitem către backend pentru generare + trimitere email
+    // Trimitem către server
     const response = await axios.post(
       `${apiUrl}/genereaza`,
       lead,
