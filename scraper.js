@@ -15,10 +15,35 @@ async function launchBrowser() {
   });
 }
 
+// Funcție de mapare a cheilor din formular către ce-asteaptă backend-ul
+function mapRawToCompanyData(raw) {
+  return {
+    inputCodCaen:         raw['cod-caen principal']            || '',
+    inputCui:             raw['cui/nr.-registru']              || '',
+    inputNumarAngajati:   raw['numar-angajati']                || '',
+    inputNumeFirma:       raw['nume-firmă']                    || '',
+    inputServicii:        raw['produse/servicii-oferite']      || '',
+    inputPreturi:         raw['prețuri']                       || '',
+    inputAvantaje:        raw['avantaje-competitive']          || '',
+    inputTelefonFirma:    raw['telefon-firmă']                 || '',
+    inputEmailFirma:      raw['email']                         || '',
+    inputWebsiteFirma:    raw['website-firmă']                 || '',
+    inputTipClienti:      raw['tipul-de clienti dorit']        || '',
+    inputDimensiuneClient:raw['dimensiune-client']             || '',
+    inputKeywords:        raw['cuvinte-cheie']                 || '',
+    inputCerinteExtra:    raw['cerinte-extra']                 || '',
+    inputLocalizare:      raw['input_comp-makx1n4r6']          || '',
+    inputDescriere:       raw['descriere-suplimentară (opțional)'] || '',
+    inputTintireGeo:      raw['input_comp-makx1n586']          || '',
+    firmaId:              raw.firmaId
+  };
+}
+
 ;(async () => {
-  const firmaId = process.env.FIRMA_ID || '7d8a16ea-53e8-4922-858c-ff9b291f16a6';
+  const firmaId = process.env.FIRMA_ID ||
+    '7d8a16ea-53e8-4922-858c-ff9b291f16a6';
   const pageUrl = `https://www.skywardflow.com/formular-scraper?firmaId=${firmaId}`;
-  const apiUrl  = process.env.API_BASE_URL     || 'http://localhost:3000';
+  const apiUrl  = process.env.API_BASE_URL || 'http://localhost:3000';
 
   let browser;
   try {
@@ -33,7 +58,7 @@ async function launchBrowser() {
     await page.goto(pageUrl, { waitUntil: 'networkidle2', timeout: 60000 });
     await page.waitForTimeout(3000);
 
-    // Detectăm iframe-ul cu formular, dacă există
+    // Detectăm iframe-ul (dacă e)
     let frame = page;
     const formFrame = page.frames().find(f => f.url().includes('formular-scraper'));
     if (formFrame) {
@@ -41,37 +66,27 @@ async function launchBrowser() {
       console.log('ℹ️ Folosesc iframe-ul de formular:', formFrame.url());
     }
 
-    // Așteptăm orice input sau textarea din DOM-ul formularului
+    // Așteptăm cel puțin un input/textarea
     await frame.waitForSelector('input, textarea', { timeout: 60000 });
 
-    // — Pas de debug: listăm toate câmpurile găsite —
-    const debugFields = await frame.evaluate(() => {
+    // Colectăm toată informația brută
+    const rawData = await frame.evaluate(fid => {
       const els = Array.from(document.querySelectorAll('input, textarea'));
-      return els.map(el => ({
-        tag: el.tagName.toLowerCase(),
-        id: el.id || null,
-        name: el.name || null,
-        placeholder: el.placeholder || null,
-        value: el.value ? el.value.trim() : ''
-      }));
-    });
-    console.log('🔍 Fields detected:', debugFields);
-
-    // — Apoi construim dinamic obiectul companyData —
-    const companyData = await frame.evaluate(fid => {
-      const els = Array.from(document.querySelectorAll('input, textarea'));
-      const data = {};
+      const out = {};
       els.forEach(el => {
         const key = el.name || el.id;
-        if (key) {
-          data[key] = el.value.trim();
-        }
+        if (key) out[key] = el.value.trim();
       });
-      data.firmaId = fid;
-      return data;
+      out.firmaId = fid;
+      return out;
     }, firmaId);
 
-    // Adăugăm datele clientului pentru API
+    console.log('🔍 Raw fields:', rawData);
+
+    // Mapăm la forma backend-ului
+    const companyData = mapRawToCompanyData(rawData);
+
+    // Adăugăm câmpurile de client
     const lead = {
       ...companyData,
       clientNameText:   process.env.TEST_CLIENT_NAME   || 'Client Test Automat',
@@ -81,7 +96,7 @@ async function launchBrowser() {
 
     console.log('✅ Lead final pregătit:', lead);
 
-    // Trimitem către server
+    // Trimitem către backend
     const response = await axios.post(
       `${apiUrl}/genereaza`,
       lead,
