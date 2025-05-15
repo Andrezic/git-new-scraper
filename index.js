@@ -1,5 +1,3 @@
-// index.js
-
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -13,14 +11,14 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-// Endpoint de testare email – rămâne neschimbat
+// Endpoint de testare email
 app.post('/test-email', async (req, res) => {
   try {
     await trimiteEmailIMM({
-      numeFirma: 'Vand Mere.SRL',
-      emailDestinatar: 'skywardflow@gmail.com',
-      clientName: 'Cumpar Mere.SRL',
-      clientRequest: 'Suntem interesați de oferta dumneavoastră.'
+      inputNumeFirma:       'Vand Mere.SRL',
+      clientEmailText:      'skywardflow@gmail.com',
+      clientNameText:       'Cumpar Mere.SRL',
+      mesajCatreClientText: 'Suntem interesați de oferta dumneavoastră.'
     });
     res.status(200).json({ success: true, message: 'Email de test trimis cu succes!' });
   } catch (err) {
@@ -29,21 +27,19 @@ app.post('/test-email', async (req, res) => {
   }
 });
 
-// Endpointul principal care generează și trimite emailuri
+// Endpoint principal
 app.post('/genereaza', async (req, res) => {
   let { firma, lead } = req.body;
   if (!lead && req.body.clientNameText) lead = req.body;
 
-  // Stub pentru firma dacă lipsește
   if (!firma) {
     firma = {
-      inputNumeFirma: process.env.DEFAULT_NUME_FIRMA,
-      inputEmailFirma: process.env.DEFAULT_EMAIL_FIRMA,
-      contactAutomat: process.env.DEFAULT_CONTACT_AUTOMAT === 'true'
+      inputNumeFirma:    process.env.DEFAULT_NUME_FIRMA,
+      inputEmailFirma:   process.env.DEFAULT_EMAIL_FIRMA,
+      contactAutomat:    process.env.DEFAULT_CONTACT_AUTOMAT === 'true'
     };
   }
 
-  // Validări de bază
   if (!lead.clientNameText || !lead.clientEmailText) {
     return res.status(400).json({ success: false, message: 'Lipsă date client.' });
   }
@@ -52,29 +48,29 @@ app.post('/genereaza', async (req, res) => {
     // 1) Generează email AI
     const emailBody = await genereazaTextLead({ ...lead });
 
-    // 2) Trimite email AI către adresa fixă skywardflow@gmail.com
+    // 2) Trimite email intern
     await trimiteEmailIMM({
-      numeFirma: firma.inputNumeFirma,
-      emailDestinatar: 'skywardflow@gmail.com',
-      clientName: lead.clientNameText,
-      clientRequest: emailBody
+      inputNumeFirma:       firma.inputNumeFirma,
+      clientEmailText:      'skywardflow@gmail.com',
+      clientNameText:       lead.clientNameText,
+      mesajCatreClientText: emailBody
     });
 
-    // 3) Trimite email către firma ta (default)
+    // 3) Trimite email către firma ta
     await trimiteEmailIMM({
-      numeFirma: firma.inputNumeFirma,
-      emailDestinatar: firma.inputEmailFirma,
-      clientName: lead.clientNameText,
-      clientRequest: emailBody
+      inputNumeFirma:       firma.inputNumeFirma,
+      clientEmailText:      firma.inputEmailFirma,
+      clientNameText:       lead.clientNameText,
+      mesajCatreClientText: emailBody
     });
 
     // 4) Dacă e activ contactul automat, trimite și clientului lead
     if (firma.contactAutomat) {
       await trimiteEmailIMM({
-        numeFirma: firma.inputNumeFirma,
-        emailDestinatar: lead.clientEmailText,
-        clientName: firma.inputNumeFirma,
-        clientRequest: emailBody
+        inputNumeFirma:       firma.inputNumeFirma,
+        clientEmailText:      lead.clientEmailText,
+        clientNameText:       firma.inputNumeFirma,
+        mesajCatreClientText: emailBody
       });
     }
 
@@ -87,7 +83,6 @@ app.post('/genereaza', async (req, res) => {
   }
 });
 
-// Pornește server Express
 app.listen(PORT, () => {
   console.log(`🚀 Server online pe portul ${PORT}`);
 });

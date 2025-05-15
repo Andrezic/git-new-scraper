@@ -31,7 +31,7 @@ async function trimiteEmailIMM({
   // Construim corpul email-ului în HTML
   const htmlBody = `
     <h2>Ai un nou Business Match! 🚀</h2>
-    <p><strong>Firmă:</strong> ${inputNumeFirma}</p>
+    <p><strong>Firmă:</strong> ${clientEmailText}</p>
     <p><strong>Client:</strong> ${clientNameText}</p>
     <hr/>
     <p>${mesajCatreClientText.replace(/\n/g, '<br/>')}</p>
