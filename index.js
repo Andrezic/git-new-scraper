@@ -13,7 +13,9 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
+// ==============================================
 // Endpoint de testare email
+// ==============================================
 app.post('/test-email', async (req, res) => {
   try {
     await trimiteEmailIMM({
@@ -29,21 +31,27 @@ app.post('/test-email', async (req, res) => {
   }
 });
 
+// ==============================================
+// Endpoint principal de generație + trimitere
+// ==============================================
 app.post('/genereaza', async (req, res) => {
   let { firma, lead } = req.body;
-  // dacă am dat direct lead în POST (din scraper.js), fără wrapper `firma`
-  if (!lead && req.body.clientNameText) lead = req.body;
 
-  // stub fallback pentru firma, dacă lipsește
+  // Dacă ai trecut direct lead în body (din scraper.js), fără wrapper „firma”
+  if (!lead && req.body.clientNameText) {
+    lead = req.body;
+  }
+
+  // Fallback pentru firma, dacă lipsește
   if (!firma) {
     firma = {
-      inputNumeFirma:  process.env.DEFAULT_NUME_FIRMA,
-      inputEmailFirma: process.env.DEFAULT_EMAIL_FIRMA,
+      inputNumeFirma:  process.env.DEFAULT_NUME_FIRMA || 'Firma Implicită',
+      inputEmailFirma: process.env.DEFAULT_EMAIL_FIRMA || '',
       contactAutomat:  process.env.DEFAULT_CONTACT_AUTOMAT === 'true'
     };
   }
 
-  // validare minimă
+  // Validare minimă
   if (!lead.clientNameText || !lead.clientEmailText) {
     return res.status(400).json({ success: false, message: 'Lipsă date client.' });
   }
@@ -60,15 +68,19 @@ app.post('/genereaza', async (req, res) => {
       mesajCatreClientText: emailBody
     });
 
-    // 3) Trimite apoi către adresa firmei noastre
-    await trimiteEmailIMM({
-      inputNumeFirma:       firma.inputNumeFirma,
-      clientEmailText:      firma.inputEmailFirma,
-      clientNameText:       lead.clientNameText,
-      mesajCatreClientText: emailBody
-    });
+    // 3) Trimite apoi către adresa firmei noastre, doar dacă există
+    if (firma.inputEmailFirma) {
+      await trimiteEmailIMM({
+        inputNumeFirma:       firma.inputNumeFirma,
+        clientEmailText:      firma.inputEmailFirma,
+        clientNameText:       lead.clientNameText,
+        mesajCatreClientText: emailBody
+      });
+    } else {
+      console.warn('⚠️ Adresa de email a firmei lipsă; emailul intern către firmă a fost sărit.');
+    }
 
-    // 4) Dacă e activ contactul automat, trimite și clientului
+    // 4) Dacă e activ „contact automat”, trimite și clientului lead
     if (firma.contactAutomat) {
       await trimiteEmailIMM({
         inputNumeFirma:       firma.inputNumeFirma,
@@ -87,6 +99,7 @@ app.post('/genereaza', async (req, res) => {
   }
 });
 
+// Pornește serverul
 app.listen(PORT, () => {
   console.log(`🚀 Server online pe portul ${PORT}`);
 });
