@@ -3,47 +3,12 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const mongoose = require('mongoose');
 const { trimiteEmailIMM } = require('./backend/emailService');
 const { genereazaTextLead } = require('./utils/openai');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const MONGODB_URI = process.env.MONGODB_URI;
-
-// Conectare MongoDB
-mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('🗄️ Conectat la MongoDB'))
-  .catch(err => console.error('❌ Eroare MongoDB:', err));
-
-// Definire schema și model pentru "Leaduri"
-const leadSchema = new mongoose.Schema({
-  inputCodCaen: String,
-  inputCui: String,
-  inputNumarAngajati: String,
-  inputNumeFirma: String,
-  inputServicii: String,
-  inputPreturi: String,
-  inputAvantaje: String,
-  inputTelefonFirma: String,
-  inputEmailFirma: String,
-  inputWebsiteFirma: String,
-  inputLocalizare: String,
-  inputDescriere: String,
-  inputTipClienti: String,
-  inputDimensiuneClient: String,
-  inputKeywords: String,
-  inputCerinteExtra: String,
-  inputTintireGeo: String,
-  firmaId: String,
-  clientNameText: String,
-  clientEmailText: String,
-  clientTelefonText: String,
-  aiEmail: String,
-  createdAt: { type: Date, default: Date.now }
-});
-const Lead = mongoose.model('Lead', leadSchema);
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -67,7 +32,7 @@ app.post('/test-email', async (req, res) => {
 });
 
 // ==============================================
-// Endpoint principal de generație + trimitere + salvare
+// Endpoint principal de generație + trimitere
 // ==============================================
 app.post('/genereaza', async (req, res) => {
   let { firma, lead } = req.body;
@@ -95,14 +60,7 @@ app.post('/genereaza', async (req, res) => {
     // 1) Generează conținutul email-ului prin OpenAI
     const emailBody = await genereazaTextLead({ ...lead });
 
-    // Adăugăm textul AI la obiectul lead pentru salvare
-    const fullLead = { ...lead, aiEmail: emailBody };
-
-    // 2) Salvează leadul în colecția Leaduri
-    const saved = await Lead.create(fullLead);
-    console.log('💾 Lead salvat în DB:', saved._id);
-
-    // 3) Trimite întâi intern, către noi
+    // 2) Trimite întâi intern, către noi
     await trimiteEmailIMM({
       inputNumeFirma:       firma.inputNumeFirma,
       clientEmailText:      'skywardflow@gmail.com',
@@ -110,7 +68,7 @@ app.post('/genereaza', async (req, res) => {
       mesajCatreClientText: emailBody
     });
 
-    // 4) Trimite apoi către adresa firmei tale, dacă e definită
+    // 3) Trimite apoi către adresa firmei tale, dacă e definită
     if (firma.inputEmailFirma) {
       await trimiteEmailIMM({
         inputNumeFirma:       firma.inputNumeFirma,
@@ -122,7 +80,7 @@ app.post('/genereaza', async (req, res) => {
       console.warn('⚠️ DEFAULT_EMAIL_FIRMA nu este setat; sărtăm trimiterea către firmă.');
     }
 
-    // 5) Dacă ai activat contactul automat, trimite și clientului lead
+    // 4) Dacă ai activat contactul automat, trimite și clientului lead
     if (firma.contactAutomat) {
       await trimiteEmailIMM({
         inputNumeFirma:       firma.inputNumeFirma,
@@ -134,9 +92,9 @@ app.post('/genereaza', async (req, res) => {
 
     return res
       .status(200)
-      .json({ success: true, message: 'Lead creat și emailuri trimise cu succes!', leadId: saved._id, aiEmail: emailBody });
+      .json({ success: true, message: 'Emailuri trimise cu succes!', aiEmail: emailBody });
   } catch (err) {
-    console.error('❌ Eroare trimitere/salvare:', err);
+    console.error('❌ Eroare trimitere:', err);
     return res.status(500).json({ success: false, error: err.message });
   }
 });
