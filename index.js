@@ -1,3 +1,5 @@
+// index.js
+
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -27,28 +29,30 @@ app.post('/test-email', async (req, res) => {
   }
 });
 
-// Endpoint principal
 app.post('/genereaza', async (req, res) => {
   let { firma, lead } = req.body;
+  // dacă am dat direct lead în POST (din scraper.js), fără wrapper `firma`
   if (!lead && req.body.clientNameText) lead = req.body;
 
+  // stub fallback pentru firma, dacă lipsește
   if (!firma) {
     firma = {
-      inputNumeFirma:    process.env.DEFAULT_NUME_FIRMA,
-      inputEmailFirma:   process.env.DEFAULT_EMAIL_FIRMA,
-      contactAutomat:    process.env.DEFAULT_CONTACT_AUTOMAT === 'true'
+      inputNumeFirma:  process.env.DEFAULT_NUME_FIRMA,
+      inputEmailFirma: process.env.DEFAULT_EMAIL_FIRMA,
+      contactAutomat:  process.env.DEFAULT_CONTACT_AUTOMAT === 'true'
     };
   }
 
+  // validare minimă
   if (!lead.clientNameText || !lead.clientEmailText) {
     return res.status(400).json({ success: false, message: 'Lipsă date client.' });
   }
 
   try {
-    // 1) Generează email AI
+    // 1) Generează conținutul email-ului prin OpenAI
     const emailBody = await genereazaTextLead({ ...lead });
 
-    // 2) Trimite email intern
+    // 2) Trimite întâi intern, către noi
     await trimiteEmailIMM({
       inputNumeFirma:       firma.inputNumeFirma,
       clientEmailText:      'skywardflow@gmail.com',
@@ -56,7 +60,7 @@ app.post('/genereaza', async (req, res) => {
       mesajCatreClientText: emailBody
     });
 
-    // 3) Trimite email către firma ta
+    // 3) Trimite apoi către adresa firmei noastre
     await trimiteEmailIMM({
       inputNumeFirma:       firma.inputNumeFirma,
       clientEmailText:      firma.inputEmailFirma,
@@ -64,7 +68,7 @@ app.post('/genereaza', async (req, res) => {
       mesajCatreClientText: emailBody
     });
 
-    // 4) Dacă e activ contactul automat, trimite și clientului lead
+    // 4) Dacă e activ contactul automat, trimite și clientului
     if (firma.contactAutomat) {
       await trimiteEmailIMM({
         inputNumeFirma:       firma.inputNumeFirma,
