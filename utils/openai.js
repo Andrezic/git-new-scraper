@@ -111,7 +111,7 @@ Mesajul către client va conține câteva paragrafe, fiecare a câte 3-5 fraze, 
 
 Dacă ceva nu îți este clar, sau dacă întâlnești blocaje web, sau orice altă problema - răspunde în log, sau unde poți tu.`;
 
-Datele utilizator
+Informații despre firmă (utilizator)
   const userPrompt = `Informații despre firmă (utilizator):
 - Cod CAEN: ${lead.inputCodCaen}
 - CUI: ${lead.inputCui}
