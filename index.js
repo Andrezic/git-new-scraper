@@ -9,45 +9,23 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+// Email intern pentru notificări
+const INTERNAL_EMAIL = process.env.INTERNAL_EMAIL || 'skywardflow@gmail.com';
 
 app.use(cors());
 app.use(bodyParser.json());
 
-// ==============================================
-// Endpoint de testare email
-// ==============================================
-app.post('/test-email', async (req, res) => {
-  try {
-    await trimiteEmailIMM({
-      inputNumeFirma:       'Vand Mere.SRL',
-      clientEmailText:      'skywardflow@gmail.com',
-      clientNameText:       'Cumpar Mere.SRL',
-      mesajCatreClientText: 'Suntem interesați de oferta dumneavoastră.'
-    });
-    res.status(200).json({ success: true, message: 'Email de test trimis cu succes!' });
-  } catch (err) {
-    console.error('❌ Eroare test email:', err);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// ==============================================
-// Endpoint principal de generație + trimitere
-// ==============================================
 app.post('/genereaza', async (req, res) => {
-  // Extragem payload: firma, lead şi eventual userName
   let { firma, lead, userName } = req.body;
 
-  // Dacă lead-ul vine direct în request, fără wrapper „firma”
+  // Dacă lead vine direct
   if (!lead && req.body.clientNameText) {
     lead = req.body;
   }
-  // Dacă avem userName, îl atașăm lead-ului pentru OpenAI
-  if (userName) {
-    lead.userName = userName;
-  }
+  // Atașăm userName dacă există
+  if (userName) lead.userName = userName;
 
-  // Setăm fallback pentru firma dacă nu e trimisă
+  // Fallback firma
   if (!firma) {
     firma = {
       inputNumeFirma:  lead.inputNumeFirma   || process.env.DEFAULT_NUME_FIRMA   || 'Firma Implicită',
@@ -56,33 +34,42 @@ app.post('/genereaza', async (req, res) => {
     };
   }
 
-  // Validare minimă
+  // Validare minimală
   if (!lead.clientNameText || !lead.clientEmailText) {
     return res.status(400).json({ success: false, message: 'Lipsă date client.' });
   }
 
   try {
-    // 1) Generează email folosind OpenAI, inclusiv userName
+    // Generează conținutul email-ului
     const emailBody = await genereazaTextLead(lead);
 
-    // 2) Trimite un singur email către client
+    // Trimite email intern (copy)
     await trimiteEmailIMM({
       inputNumeFirma:       firma.inputNumeFirma,
-      clientEmailText:      lead.clientEmailText,
+      clientEmailText:      INTERNAL_EMAIL,
       clientNameText:       lead.clientNameText,
       mesajCatreClientText: emailBody
     });
 
+    // Trimite email către client doar dacă switchContactAutomat este activ
+    if (lead.switchContactAutomat) {
+      await trimiteEmailIMM({
+        inputNumeFirma:       firma.inputNumeFirma,
+        clientEmailText:      lead.clientEmailText,
+        clientNameText:       lead.clientNameText,
+        mesajCatreClientText: emailBody
+      });
+    }
+
     return res
       .status(200)
-      .json({ success: true, message: 'Email trimis cu succes!', aiEmail: emailBody });
+      .json({ success: true, message: 'Email intern și către client trimise cu succes!', aiEmail: emailBody });
   } catch (err) {
     console.error('❌ Eroare trimitere:', err);
     return res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// Pornește serverul
 app.listen(PORT, () => {
   console.log(`🚀 Server online pe portul ${PORT}`);
 });
