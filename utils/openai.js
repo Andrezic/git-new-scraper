@@ -6,8 +6,6 @@ require('dotenv').config();
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_MODEL = 'gpt-4o';
-// Numele expeditorului pentru înlocuirea placeholder-ului [Numele dvs.]
-const USER_NAME = process.env.USER_NAME || '';
 
 // Încarcă lista de compatibilități CAEN detaliată din fișier markdown
 function loadCaenCompatibilities() {
@@ -22,11 +20,13 @@ function loadCaenCompatibilities() {
 
 /**
  * Generează textul lead-ului (email B2B) pe baza datelor firmei și lista CAEN detaliată.
+ * Așteaptă în obiectul lead proprietatea userName cu numele expeditorului.
  */
 async function genereazaTextLead(lead) {
   const caenList = loadCaenCompatibilities();
+  const senderName = lead.userName || 'echipa Skyward Flow';
 
-  // Mesaj de sistem (prompt principal) – rămâne neschimbat
+  // Mesaj de sistem (prompt principal)
   const systemPrompt = `Ești GPT-4o, un agent inteligent și autonom specializat în Business Match B2B.
 Rolul tău principal este să analizezi atent informațiile introduse de IMM-uri (firme mici și medii) și să identifici cele mai bune oportunități de colaborare B2B, pe baza unei potriviri avansate între nevoile și serviciile firmelor implicate.
 
@@ -35,7 +35,7 @@ Rolul tău principal este să analizezi atent informațiile introduse de IMM-uri
 1. Analiză Logică (nu scrii în email): Examinezi și înțelegi detaliile oferite de firma utilizatorului (domeniu, servicii, avantaje competitive etc.) și cerințele sale privind clientul ideal.
 2. Calificare inteligentă (nu scrii în email): Dintr-o listă oferită de sistemul extern (realizată prin scraping de site-uri specializate), identifici cea mai compatibilă firmă-client pentru utilizator.
 3. Generare email profesionist (generezi emailul): Compui un mesaj profesionist, formal și prietenos, care să promoveze colaborarea între firme și să includă un call-to-action clar.
-4. Scrii conținutul emailului direct în #mesajCatreClientText.
+4. Scrii conținutul emailului direct, fără placeholdere.
 
 Important: Răspunsul final va fi formulat integral în limba română, adaptat contextului și va include un call-to-action clar.`;
 
@@ -59,7 +59,7 @@ Important: Răspunsul final va fi formulat integral în limba română, adaptat 
     .replace(/#inputCerinteExtra/g,    lead.inputCerinteExtra || '')
     .replace(/#inputTintireGeo/g,      lead.inputTintireGeo || '');
 
-  // Prompt de utilizator cu detaliile lead-ului (nemodificat)
+  // Prompt de utilizator cu detaliile lead-ului
   const userPrompt = `Informații despre firmă:
 - Cod CAEN: ${lead.inputCodCaen}
 - CUI: ${lead.inputCui}
@@ -99,10 +99,14 @@ ${caenList}
     );
 
     let generated = response.data.choices[0].message.content.trim();
-    // Elimină placeholder-ul inițial și înlocuiește genericele cu date reale
-    generated = generated.replace(/^#mesajCatreClientText\s*/i, '');
-    generated = generated.replace(/\[Numele dvs\.\]/g, USER_NAME);
-    generated = generated.replace(/\[Nume companie client\]/g, lead.clientNameText || '');
+    // Înlocuiește [Numele tău] și [Nume companie client]
+    if (lead.userName) {
+      generated = generated.replace(/\[Numele (?:tău|dvs\.)\]/g, senderName);
+    }
+    if (lead.clientNameText) {
+      generated = generated.replace(/\[Nume (?:companie )?client\]/g, lead.clientNameText);
+      generated = generated.replace(/\[Nume Contact\]/g, lead.clientNameText);
+    }
 
     console.log('🤖 Mesaj generat de AI:', generated);
     return generated;
