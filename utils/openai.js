@@ -112,6 +112,29 @@ Mesajul către client va conține câteva paragrafe, fiecare a câte 3-5 fraze, 
 
 Dacă ceva nu îți este clar, sau dacă întâlnești blocaje web, sau orice altă problema - răspunde în log, sau unde poți tu.`;
 
+  const userPrompt = `Informații utilizator:
+
+Cod CAEN: #inputCodCaen
+CUI: #inputCui
+Număr angajați: #inputNumarAngajati
+Nume firmă: #inputNumeFirma
+Servicii oferite: #inputServicii
+Prețuri: #inputPreturi
+Avantaje competitive: #inputAvantaje
+Telefon firmă: #inputTelefonFirma
+Email firmă: #inputEmailFirma
+Website firmă: #inputWebsiteFirma
+Localizare: #inputLocalizare
+Descriere adițională: #inputDescriere
+
+Specificații client dorit
+
+Tipul de clienți vizați: #inputTipClienti
+Dimensiunea clientului: #inputDimensiuneClient
+Cuvinte cheie relevante: #inputKeywords
+Cerințe suplimentare: #inputCerinteExtra
+Țintire geografică: #inputTintireGeo`;
+
   const messages = [
     { role: 'system', content: systemPrompt },
     { role: 'user', content: userPrompt }
