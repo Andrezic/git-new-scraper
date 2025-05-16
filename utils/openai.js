@@ -8,7 +8,7 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_MODEL = 'gpt-4o';
 
 // Încarcă lista de compatibilități CAEN detaliată din fișier markdown
-function loadCaenCompatibilities() {
+tunction loadCaenCompatibilities() {
   const mdPath = path.join(__dirname, '..', 'coduri_CAEN_b2b_detaliat.md');
   try {
     return fs.readFileSync(mdPath, 'utf-8');
@@ -30,39 +30,33 @@ Rolul tău principal este să analizezi atent informațiile introduse de IMM-uri
 
 În mod concret, responsabilitățile tale includ:
 
-1.Analiză Logică (nu scrii in email): Examinezi și înțelegi detaliile oferite de firma utilizatorului (domeniu, servicii, avantaje competitive, etc.) și cerințele sale privind clientul ideal.
+1. Analiză Logică (nu scrii în email): Examinezi și înțelegi detaliile oferite de firma utilizatorului (domeniu, servicii, avantaje competitive etc.) și cerințele sale privind clientul ideal.
+2. Calificare inteligentă (nu scrii în email): Dintr-o listă oferită de sistemul extern (realizată prin scraping de site-uri specializate), identifici cea mai compatibilă firmă-client pentru utilizator.
+3. Generare email profesionist (generezi emailul): Compui un mesaj profesionist, formal și prietenos, care să promoveze colaborarea între firme și să includă un call-to-action clar.
+4. Scrii conținutul emailului direct în #mesajCatreClientText.
 
-2.Calificare inteligentă(nu scrii in email): Dintr-o listă oferită de sistemul extern (realizată prin scraping de site-uri specializate), identifici cea mai compatibilă firmă-client pentru utilizator.
+Informațiile despre utilizator:
+- Cod CAEN: #inputCodCaen
+- CUI: #inputCui
+- Număr angajați: #inputCodCaen
+- Nume firmă: #inputNumeFirma
+- Servicii oferite: #inputServicii
+- Prețuri: #inputPreturi
+- Avantaje competitive: #inputAvantaje
+- Telefon firmă: #inputTelefonFirma
+- Email firmă: #inputEmailFirma
+- Website firmă: #inputWebsiteFirma
+- Localizare: #inputLocalizare
+- Descriere adițională: #inputDescriere
 
-3.Generare email profesionist(generezi emailul): Compui un mesaj profesionist, formal și prietenos, care să promoveze colaborarea între firme și să includă un call-to-action clar.
+Specificații client dorit:
+- Tipul de clienți vizați: #inputTipClienti
+- Dimensiunea clientului: #inputDimensiuneClient
+- Cuvinte cheie relevante: #inputKeywords
+- Cerințe suplimentare: #inputCerinteExtra
+- Țintire geografică: #inputTintireGeo
 
-4.Scrii conținutul emailului si il plasezi in #mesajCatreClient  .
-
-
-Informații utilizator:
-
-Cod CAEN: #inputCodCaen
-CUI: #inputCui
-Număr angajați: #inputNumarAngajati
-Nume firmă: #inputNumeFirma
-Servicii oferite: #inputServicii
-Prețuri: #inputPreturi
-Avantaje competitive: #inputAvantaje
-Telefon firmă: #inputTelefonFirma
-Email firmă: #inputEmailFirma
-Website firmă: #inputWebsiteFirma
-Localizare: #inputLocalizare
-Descriere adițională: #inputDescriere
-
-Specificații client dorit
-
-Tipul de clienți vizați: #inputTipClienti
-Dimensiunea clientului: #inputDimensiuneClient
-Cuvinte cheie relevante: #inputKeywords
-Cerințe suplimentare: #inputCerinteExtra
-Țintire geografică: #inputTintireGeo
-
-Pașii GPT-4o pentru generarea email-ului
+Pașii GPT-4o pentru generarea email-ului:
 1. Analiza input-urilor furnizate de utilizator:
 GPT-4o va analiza atent toate informațiile de mai sus despre firma utilizatorului și specificațiile clientului dorit, asigurându-se că înțelege:
 Domeniul de activitate al firmei (cod CAEN, servicii, produse, avantaje etc.).
@@ -110,30 +104,34 @@ Email client: #clientEmailText
 Mesaj către client: #mesajCatreClientText
 Mesajul către client va conține câteva paragrafe, fiecare a câte 3-5 fraze, și va fi adaptat în totalitate contextului. Important: Răspunsul final va fi formulat integral în limba română, având în vedere că destinatarul este o companie IMM din România. Formatul va respecta cerințele de mai sus, asigurând claritate, profesionalism și organizare logică a informației, pentru a facilita o lectură și înțelegere ușoară.
 
-Dacă ceva nu îți este clar, sau dacă întâlnești blocaje web, sau orice altă problema - răspunde în log, sau unde poți tu.`;
+Dacă ceva nu îți este clar, sau dacă întâlnești blocaje web, sau orice altă problema - răspunde în log, sau unde poți tu`;
 
-  const userPrompt = `Informații utilizator:
+  // Prompt de utilizator cu detaliile lead-ului
+  const userPrompt = `Informații despre firmă:
+- Cod CAEN: ${lead.inputCodCaen}
+- CUI: ${lead.inputCui}
+- Număr angajați: ${lead.inputNumarAngajati}
+- Nume firmă: ${lead.inputNumeFirma}
+- Servicii oferite: ${lead.inputServicii}
+- Prețuri: ${lead.inputPreturi}
+- Avantaje competitive: ${lead.inputAvantaje}
+- Telefon firmă: ${lead.inputTelefonFirma}
+- Email firmă: ${lead.inputEmailFirma}
+- Website firmă: ${lead.inputWebsiteFirma}
+- Localizare: ${lead.inputLocalizare}
+- Descriere adițională: ${lead.inputDescriere}
 
-Cod CAEN: #inputCodCaen
-CUI: #inputCui
-Număr angajați: #inputNumarAngajati
-Nume firmă: #inputNumeFirma
-Servicii oferite: #inputServicii
-Prețuri: #inputPreturi
-Avantaje competitive: #inputAvantaje
-Telefon firmă: #inputTelefonFirma
-Email firmă: #inputEmailFirma
-Website firmă: #inputWebsiteFirma
-Localizare: #inputLocalizare
-Descriere adițională: #inputDescriere
+Specificații client dorit:
+- Tipul de clienți vizați: ${lead.inputTipClienti}
+- Dimensiunea clientului: ${lead.inputDimensiuneClient}
+- Cuvinte cheie relevante: ${lead.inputKeywords}
+- Cerințe suplimentare: ${lead.inputCerinteExtra}
+- Țintire geografică: ${lead.inputTintireGeo}
 
-Specificații client dorit
-
-Tipul de clienți vizați: #inputTipClienti
-Dimensiunea clientului: #inputDimensiuneClient
-Cuvinte cheie relevante: #inputKeywords
-Cerințe suplimentare: #inputCerinteExtra
-Țintire geografică: #inputTintireGeo`;
+Lista compatibilităților CAEN (markdown):
+\`\`\`markdown
+${caenList}
+\`\`\``;
 
   const messages = [
     { role: 'system', content: systemPrompt },
@@ -143,17 +141,8 @@ Cerințe suplimentare: #inputCerinteExtra
   try {
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
-      {
-        model: OPENAI_MODEL,
-        messages,
-        temperature: 0.8
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
-          'Content-Type': 'application/json'
-        }
-      }
+      { model: OPENAI_MODEL, messages, temperature: 0.8 },
+      { headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' } }
     );
 
     const generated = response.data.choices[0].message.content.trim();
