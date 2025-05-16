@@ -106,8 +106,7 @@ Email client: #clientEmailText
 Mesaj către client: #mesajCatreClientText
 Mesajul către client va conține câteva paragrafe, fiecare a câte 3-5 fraze, și va fi adaptat în totalitate contextului. Important: Răspunsul final va fi formulat integral în limba română, având în vedere că destinatarul este o companie IMM din România. Formatul va respecta cerințele de mai sus, asigurând claritate, profesionalism și organizare logică a informației, pentru a facilita o lectură și înțelegere ușoară.
 
-Dacă ceva nu îți este clar, sau dacă întâlnești blocaje web, sau orice altă problema - răspunde în log, sau unde poți tu`;
-
+Dacă ceva nu îți este clar, sau dacă întâlnești blocaje web, sau orice altă problema - răspunde în log, sau unde poți tu.
 Lista compatibilităților CAEN (markdown):
 \`\`\`markdown
 ${caenList}
