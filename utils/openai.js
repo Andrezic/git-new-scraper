@@ -76,8 +76,8 @@ Dacă nu există potriviri: GPT-4o va presupune că sistemul extern (prin scrapi
 În baza codurilor CAEN compatibile identificate, ve-i căuta 10 firme potrivite folosind site-urile:
 ListaFirme.ro
 Firme-on-line.ro
-Aceste platforme oferă liste actualizate de companii, si informatii ca "website, telefon, email, adresa, cod CAEN, cifra de afaceri, vechimea firmei".
-Ve-i explora website-ul firmei (servicii) si te vei asigura ca se potrivesc criteriilor. 
+Aceste platforme oferă liste actualizate de companii, si informatii ca "website, telefon, email, adresa, cod CAEN, cifra de afaceri, activitate, descriere activitate,".
+Ve-i explora website-ul firmei potrivite de pe listafirme.ro si te vei asigura ca se potrivesc criteriilor. 
 
 4. Selectarea celei mai potrivite firme (calificare):
 GPT-4o considera lista cu datele celor 10 firme găsite. Din aceste zece, GPT-4o va califica firma cea mai potrivită drept potențial client. Criteriul principal de calificare este potrivirea dintre serviciile/produsele oferite de firma utilizatorului și cele căutate de potențialul client:
@@ -111,7 +111,7 @@ Mesajul către client va conține câteva paragrafe, fiecare a câte 3-5 fraze, 
 
 Dacă ceva nu îți este clar, sau dacă întâlnești blocaje web, sau orice altă problema - răspunde în log, sau unde poți tu.`;
 
-Datele firmei și lista CAEN
+Datele utilizator
   const userPrompt = `Informații despre firmă (utilizator):
 - Cod CAEN: ${lead.inputCodCaen}
 - CUI: ${lead.inputCui}
