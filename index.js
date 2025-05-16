@@ -35,18 +35,19 @@ app.post('/test-email', async (req, res) => {
 // Endpoint principal de generație + trimitere
 // ==============================================
 app.post('/genereaza', async (req, res) => {
+  // Extragem lead și firma din payload
   let { firma, lead } = req.body;
 
-  // Dacă trimite direct datele lead fără wrapper „firma”
+  // Dacă s-au trimis direct datele lead-ului (din scraper), fără wrapper „firma”
   if (!lead && req.body.clientNameText) {
     lead = req.body;
   }
 
-  // Fallback pentru firma, dacă nu e trimisă în payload
+  // Dacă nu există obiectul firma, îl construim pe baza câmpurilor din lead
   if (!firma) {
     firma = {
-      inputNumeFirma:  process.env.DEFAULT_NUME_FIRMA   || 'Firma Implicită',
-      inputEmailFirma: process.env.DEFAULT_EMAIL_FIRMA  || '',
+      inputNumeFirma:  lead.inputNumeFirma   || process.env.DEFAULT_NUME_FIRMA   || 'Firma Implicită',
+      inputEmailFirma: lead.inputEmailFirma  || process.env.DEFAULT_EMAIL_FIRMA  || '',
       contactAutomat:  process.env.DEFAULT_CONTACT_AUTOMAT === 'true'
     };
   }
@@ -68,7 +69,7 @@ app.post('/genereaza', async (req, res) => {
       mesajCatreClientText: emailBody
     });
 
-    // 3) Trimite apoi către adresa firmei tale, dacă e definită
+    // 3) Trimite apoi către adresa firmei tale, folosind cea din lead sau .env
     if (firma.inputEmailFirma) {
       await trimiteEmailIMM({
         inputNumeFirma:       firma.inputNumeFirma,
@@ -77,7 +78,7 @@ app.post('/genereaza', async (req, res) => {
         mesajCatreClientText: emailBody
       });
     } else {
-      console.warn('⚠️ DEFAULT_EMAIL_FIRMA nu este setat; sărtăm trimiterea către firmă.');
+      console.warn('⚠️ Adresa de email a firmei nu este definită; sărtăm trimiterea către firmă.');
     }
 
     // 4) Dacă ai activat contactul automat, trimite și clientului lead
