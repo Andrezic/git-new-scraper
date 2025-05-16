@@ -100,18 +100,23 @@ ${caenList}
 
     let generated = response.data.choices[0].message.content.trim();
 
-    // Elimină prefixul "Email propus:" și separatorul markdown
-    generated = generated.replace(/^Email propus:[\s\S]*?---\s*/i, '');
+    // Curățare output:
+    // Elimină orice linie de tip "Email..." la început (ex. "Email propus:").
+    generated = generated.replace(/^\*?Email[^
+]*\n+/i, '');
+    // Elimină prefixul '---' dacă există
+    generated = generated.replace(/^---+\s*/i, '');
     // Elimină placeholder-ul #mesajCatreClientText
     generated = generated.replace(/^#mesajCatreClient(?:e)?Text\s*/i, '');
     // Elimină 'Subiect: ...' dacă apare la început
     generated = generated.replace(/^Subiect:[^\n]*\n+/i, '');
-    // Înlocuiește toate variațiile de [Numele ...] cu senderName
+    // Înlocuiește toate placeholder-ele de nume cu valorile reale
     generated = generated.replace(/\[Numele\s*(?:tău|dvs\.|dumneavoastră|Dumneavoastră)\]/gi, senderName);
-    // Înlocuiește toate variațiile de [Nume companie client] sau [Numele Firmei Compatibile]
+    // Înlocuiește placeholder-ul [Nume Companie]
+    generated = generated.replace(/\[Nume\s+Companie\]/gi, lead.clientNameText || '');
+    // Înlocuiește toate celelalte variații
     generated = generated.replace(/\[Nume\s*(?:companie\s*)?client\]/gi, lead.clientNameText || '');
     generated = generated.replace(/\[Numele Firmei Compatibile\]/gi, lead.clientNameText || '');
-    // Înlocuiește [Nume Contact]
     generated = generated.replace(/\[Nume\s+Contact\]/gi, lead.clientNameText || '');
 
     console.log('🤖 Mesaj generat de AI:', generated);
