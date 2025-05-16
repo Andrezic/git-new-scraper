@@ -33,40 +33,31 @@ Rolul tău principal este să analizezi atent informațiile introduse de IMM-uri
 1. Analiză Logică (nu scrii în email): Examinezi și înțelegi detaliile oferite de firma utilizatorului (domeniu, servicii, avantaje competitive etc.) și cerințele sale privind clientul ideal.
 2. Calificare inteligentă (nu scrii în email): Dintr-o listă oferită de sistemul extern (realizată prin scraping de site-uri specializate), identifici cea mai compatibilă firmă-client pentru utilizator.
 3. Generare email profesionist (generezi emailul): Compui un mesaj profesionist, formal și prietenos, care să promoveze colaborarea între firme și să includă un call-to-action clar.
-4. Scrii conținutul emailului direct în #mesajCatreClientText.
-
-Informațiile despre utilizator:
-- Cod CAEN: #inputCodCaen
-- CUI: #inputCui
-- Număr angajați: #inputNumarAngajati
-- Nume firmă: #inputNumeFirma
-- Servicii oferite: #inputServicii
-- Prețuri: #inputPreturi
-- Avantaje competitive: #inputAvantaje
-- Telefon firmă: #inputTelefonFirma
-- Email firmă: #inputEmailFirma
-- Website firmă: #inputWebsiteFirma
-- Localizare: #inputLocalizare
-- Descriere adițională: #inputDescriere
-
-Specificații client dorit:
-- Tipul de clienți vizați: #inputTipClienti
-- Dimensiunea clientului: #inputDimensiuneClient
-- Cuvinte cheie relevante: #inputKeywords
-- Cerințe suplimentare: #inputCerinteExtra
-- Țintire geografică: #inputTintireGeo
-
-Pașii GPT-4o pentru generarea email-ului:
-1. Analiza input-urilor furnizate de utilizator.
-2. Identificarea codurilor CAEN compatibile.
-3. Căutarea companiilor potrivite.
-4. Selectarea celei mai potrivite firme (calificare).
-5. Completarea datelor clientului qualificat.
-6. Generarea mesajului către client (#mesajCatreClientText).
+4. Scrii conținutul emailului direct în #mesajCatreClienteText.
 
 Important: Răspunsul final va fi formulat integral în limba română, adaptat contextului și va include un call-to-action clar.`;
 
-  // Prompt de utilizator cu detaliile lead-ului
+  // Înlocuiește placeholder-ele din systemPrompt cu valorile reale din lead
+  const finalSystemPrompt = systemPrompt
+    .replace(/#inputCodCaen/g,        lead.inputCodCaen || '')
+    .replace(/#inputCui/g,            lead.inputCui || '')
+    .replace(/#inputNumarAngajati/g,  lead.inputNumarAngajati || '')
+    .replace(/#inputNumeFirma/g,      lead.inputNumeFirma || '')
+    .replace(/#inputServicii/g,       lead.inputServicii || '')
+    .replace(/#inputPreturi/g,        lead.inputPreturi || '')
+    .replace(/#inputAvantaje/g,       lead.inputAvantaje || '')
+    .replace(/#inputTelefonFirma/g,   lead.inputTelefonFirma || '')
+    .replace(/#inputEmailFirma/g,     lead.inputEmailFirma || '')
+    .replace(/#inputWebsiteFirma/g,   lead.inputWebsiteFirma || '')
+    .replace(/#inputLocalizare/g,     lead.inputLocalizare || '')
+    .replace(/#inputDescriere/g,      lead.inputDescriere || '')
+    .replace(/#inputTipClienti/g,     lead.inputTipClienti || '')
+    .replace(/#inputDimensiuneClient/g, lead.inputDimensiuneClient || '')
+    .replace(/#inputKeywords/g,       lead.inputKeywords || '')
+    .replace(/#inputCerinteExtra/g,   lead.inputCerinteExtra || '')
+    .replace(/#inputTintireGeo/g,     lead.inputTintireGeo || '');
+
+  // Prompt de utilizator cu detaliile lead-ului (nemodificat)
   const userPrompt = `Informații despre firmă:
 - Cod CAEN: ${lead.inputCodCaen}
 - CUI: ${lead.inputCui}
@@ -94,7 +85,7 @@ ${caenList}
 \`\`\``;
 
   const messages = [
-    { role: 'system', content: systemPrompt },
+    { role: 'system', content: finalSystemPrompt },
     { role: 'user', content: userPrompt }
   ];
 
