@@ -38,7 +38,7 @@ Rolul tău principal este să analizezi atent informațiile introduse de IMM-uri
 
 4.Scrii conținutul emailului direct in #mesajCatreClient  .
 
-Informații despre firmă (utilizator)
+Informații utilizator:
 
 Cod CAEN: #inputCodCaen
 CUI: #inputCui
@@ -111,7 +111,7 @@ Mesajul către client va conține câteva paragrafe, fiecare a câte 3-5 fraze, 
 
 Dacă ceva nu îți este clar, sau dacă întâlnești blocaje web, sau orice altă problema - răspunde în log, sau unde poți tu.`;
 
-Informații despre firmă (utilizator)
+Informații utilizator:
   const userPrompt = `Informații despre firmă (utilizator):
 - Cod CAEN: ${lead.inputCodCaen}
 - CUI: ${lead.inputCui}
