@@ -99,14 +99,15 @@ ${caenList}
     );
 
     let generated = response.data.choices[0].message.content.trim();
-    // Înlocuiește [Numele tău] și [Nume companie client]
-    if (lead.userName) {
-      generated = generated.replace(/\[Numele (?:tău|dvs\.)\]/g, senderName);
-    }
-    if (lead.clientNameText) {
-      generated = generated.replace(/\[Nume (?:companie )?client\]/g, lead.clientNameText);
-      generated = generated.replace(/\[Nume Contact\]/g, lead.clientNameText);
-    }
+    // Elimină și înlocuiește placeholder-ele și titlul subiectului
+    generated = generated.replace(/^#mesajCatreClient(?:e)?Text\s*/i, '');
+    // Înlocuiește [Numele (tău|dvs.|Dumneavoastră)] cu senderName
+    generated = generated.replace(/\[Numele (?:tău|dvs\.|Dumneavoastră)\]/g, senderName);
+    // Înlocuiește [Nume companie client] și [Numele Firmei Compatibile] cu lead.clientNameText
+    generated = generated.replace(/\[Nume (?:companie )?client\]/g, lead.clientNameText || '');
+    generated = generated.replace(/\[Numele Firmei Compatibile\]/g, lead.clientNameText || '');
+    // Înlocuiește [Nume Contact] dacă mai există
+    generated = generated.replace(/\[Nume Contact\]/g, lead.clientNameText || '');
 
     console.log('🤖 Mesaj generat de AI:', generated);
     return generated;
