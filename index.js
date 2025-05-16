@@ -35,15 +35,19 @@ app.post('/test-email', async (req, res) => {
 // Endpoint principal de generație + trimitere
 // ==============================================
 app.post('/genereaza', async (req, res) => {
-  // Extragem lead și firma din payload
-  let { firma, lead } = req.body;
+  // Extragem payload: firma, lead şi eventual userName
+  let { firma, lead, userName } = req.body;
 
-  // Dacă s-au trimis direct datele lead-ului (din scraper), fără wrapper „firma”
+  // Dacă lead-ul vine direct în request, fără wrapper „firma”
   if (!lead && req.body.clientNameText) {
     lead = req.body;
   }
+  // Dacă avem userName, îl atașăm lead-ului pentru OpenAI
+  if (userName) {
+    lead.userName = userName;
+  }
 
-  // Dacă nu există obiectul firma, îl construim pe baza câmpurilor din lead
+  // Setăm fallback pentru firma dacă nu e trimisă
   if (!firma) {
     firma = {
       inputNumeFirma:  lead.inputNumeFirma   || process.env.DEFAULT_NUME_FIRMA   || 'Firma Implicită',
@@ -58,36 +62,20 @@ app.post('/genereaza', async (req, res) => {
   }
 
   try {
-    // 1) Generează conținutul email-ului prin OpenAI
-    const emailBody = await genereazaTextLead({ ...lead });
+    // 1) Generează email folosind OpenAI, inclusiv userName
+    const emailBody = await genereazaTextLead(lead);
 
- 
-
-    // 3) Trimite apoi către adresa firmei tale, folosind cea din lead sau .env
-    if (firma.inputEmailFirma) {
-      await trimiteEmailIMM({
-        inputNumeFirma:       firma.inputNumeFirma,
-        clientEmailText:      firma.inputEmailFirma,
-        clientNameText:       lead.clientNameText,
-        mesajCatreClientText: emailBody
-      });
-    } else {
-      console.warn('⚠️ Adresa de email a firmei nu este definită; sărtăm trimiterea către firmă.');
-    }
-
-    // 4) Dacă ai activat contactul automat, trimite și clientului lead
-    if (firma.contactAutomat) {
-      await trimiteEmailIMM({
-        inputNumeFirma:       firma.inputNumeFirma,
-        clientEmailText:      lead.clientEmailText,
-        clientNameText:       firma.inputNumeFirma,
-        mesajCatreClientText: emailBody
-      });
-    }
+    // 2) Trimite un singur email către client
+    await trimiteEmailIMM({
+      inputNumeFirma:       firma.inputNumeFirma,
+      clientEmailText:      lead.clientEmailText,
+      clientNameText:       lead.clientNameText,
+      mesajCatreClientText: emailBody
+    });
 
     return res
       .status(200)
-      .json({ success: true, message: 'Emailuri trimise cu succes!', aiEmail: emailBody });
+      .json({ success: true, message: 'Email trimis cu succes!', aiEmail: emailBody });
   } catch (err) {
     console.error('❌ Eroare trimitere:', err);
     return res.status(500).json({ success: false, error: err.message });
