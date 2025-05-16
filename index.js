@@ -61,13 +61,7 @@ app.post('/genereaza', async (req, res) => {
     // 1) Generează conținutul email-ului prin OpenAI
     const emailBody = await genereazaTextLead({ ...lead });
 
-    // 2) Trimite întâi intern, către noi
-    await trimiteEmailIMM({
-      inputNumeFirma:       firma.inputNumeFirma,
-      clientEmailText:      'skywardflow@gmail.com',
-      clientNameText:       lead.clientNameText,
-      mesajCatreClientText: emailBody
-    });
+ 
 
     // 3) Trimite apoi către adresa firmei tale, folosind cea din lead sau .env
     if (firma.inputEmailFirma) {
