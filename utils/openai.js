@@ -100,15 +100,17 @@ ${caenList}
 
     let generated = response.data.choices[0].message.content.trim();
 
+    // Elimină prefixul "Email propus:" și separatorul markdown
+    generated = generated.replace(/^Email propus:[\s\S]*?---\s*/i, '');
     // Elimină placeholder-ul #mesajCatreClientText
     generated = generated.replace(/^#mesajCatreClient(?:e)?Text\s*/i, '');
     // Elimină 'Subiect: ...' dacă apare la început
     generated = generated.replace(/^Subiect:[^\n]*\n+/i, '');
-    // Înlocuiește toate variațiile de [Numele ...] cu senderName (case‑insensitive)
-    generated = generated.replace(/\[Numele\s+(?:tău|dvs\.?|dumneavoastră|Dumneavoastră)\]/gi, senderName);
+    // Înlocuiește toate variațiile de [Numele ...] cu senderName
+    generated = generated.replace(/\[Numele\s*(?:tău|dvs\.|dumneavoastră|Dumneavoastră)\]/gi, senderName);
     // Înlocuiește toate variațiile de [Nume companie client] sau [Numele Firmei Compatibile]
     generated = generated.replace(/\[Nume\s*(?:companie\s*)?client\]/gi, lead.clientNameText || '');
-    generated = generated.replace(/\[Numele\s+Firmei\s+Compatibile\]/gi, lead.clientNameText || '');
+    generated = generated.replace(/\[Numele Firmei Compatibile\]/gi, lead.clientNameText || '');
     // Înlocuiește [Nume Contact]
     generated = generated.replace(/\[Nume\s+Contact\]/gi, lead.clientNameText || '');
 
