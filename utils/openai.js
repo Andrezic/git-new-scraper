@@ -7,7 +7,7 @@ require('dotenv').config();
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_MODEL = 'gpt-4o';
 
-// Încarcă lista de compatibilități CAEN detaliată din fișier markdown
+// Încarcă lista de compatibilități CAEN din fișier markdown
 function loadCaenCompatibilities() {
   const mdPath = path.join(__dirname, '..', 'coduri_CAEN_b2b_detaliat.md');
   try {
@@ -19,55 +19,18 @@ function loadCaenCompatibilities() {
 }
 
 /**
- * Generează textul lead-ului (email B2B) pe baza datelor firmei și lista CAEN detaliată.
+ * Generează textul email-ului B2B pe baza lead-ului și listei CAEN.
+ * @param {Object} lead Obiect cu proprietăți input* și client*Text
+ * @returns {string} Textul generat de OpenAI
  */
 async function genereazaTextLead(lead) {
   const caenList = loadCaenCompatibilities();
 
-  // Mesaj de sistem
-  const systemPrompt = `Ești GPT-4o, un agent inteligent și autonom specializat în Business Match B2B.
-Rolul tău principal este să analizezi atent informațiile introduse de IMM-uri (firme mici și medii) și să identifici cele mai bune oportunități de colaborare B2B, pe baza unei potriviri avansate între nevoile și serviciile firmelor implicate.
+  // Prompt de sistem pentru GPT
+  const systemPrompt = `Ești GPT-4o, un agent inteligent și autonom specializat în Business Match B2B. Rolul tău este să analizezi informațiile unei firme și specificațiile clientului ideal și să generezi un email profesionist care promovează colaborarea.`;
 
-În mod concret, responsabilitățile tale includ:
-
-1. Analiză Logică (nu scrii în email): Examinezi și înțelegi detaliile oferite de firma utilizatorului (domeniu, servicii, avantaje competitive etc.) și cerințele sale privind clientul ideal.
-2. Calificare inteligentă (nu scrii în email): Dintr-o listă oferită de sistemul extern (realizată prin scraping de site-uri specializate), identifici cea mai compatibilă firmă-client pentru utilizator.
-3. Generare email profesionist (generezi emailul): Compui un mesaj profesionist, formal și prietenos, care să promoveze colaborarea între firme și să includă un call-to-action clar.
-4. Scrii conținutul emailului direct în #mesajCatreClientText.
-
-Informațiile despre utilizator:
-- Cod CAEN: #inputCodCaen
-- CUI: #inputCui
-- Număr angajați: #inputNumarAngajati
-- Nume firmă: #inputNumeFirma
-- Servicii oferite: #inputServicii
-- Prețuri: #inputPreturi
-- Avantaje competitive: #inputAvantaje
-- Telefon firmă: #inputTelefonFirma
-- Email firmă: #inputEmailFirma
-- Website firmă: #inputWebsiteFirma
-- Localizare: #inputLocalizare
-- Descriere adițională: #inputDescriere
-
-Specificații client dorit:
-- Tipul de clienți vizați: #inputTipClienti
-- Dimensiunea clientului: #inputDimensiuneClient
-- Cuvinte cheie relevante: #inputKeywords
-- Cerințe suplimentare: #inputCerinteExtra
-- Țintire geografică: #inputTintireGeo
-
-Pașii GPT-4o pentru generarea email-ului:
-1. Analiza input-urilor furnizate de utilizator.
-2. Identificarea codurilor CAEN compatibile.
-3. Căutarea companiilor potrivite.
-4. Selectarea celei mai potrivite firme (calificare).
-5. Completarea datelor clientului calificat.
-6. Generarea mesajului către client (#mesajCatreClientText).
-
-Important: Răspunsul final va fi formulat integral în limba română, adaptat contextului și va include un call-to-action clar.`;
-
-  // Informații utilizator (prompt pentru user)
-  const userPrompt = `Informații despre firmă (utilizator):
+  // Prompt de utilizator cu detaliile lead-ului
+  const userPrompt = `Informații despre firmă:
 - Cod CAEN: ${lead.inputCodCaen}
 - CUI: ${lead.inputCui}
 - Număr angajați: ${lead.inputNumarAngajati}
@@ -93,7 +56,6 @@ Lista compatibilităților CAEN (markdown):
 ${caenList}
 \`\`\``;
 
-  // Combinăm sistem + utilizator
   const messages = [
     { role: 'system', content: systemPrompt },
     { role: 'user', content: userPrompt }
@@ -102,17 +64,8 @@ ${caenList}
   try {
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
-      {
-        model: OPENAI_MODEL,
-        messages,
-        temperature: 0.8
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${OPENAI_API_KEY}`,
-          'Content-Type': 'application/json'
-        }
-      }
+      { model: OPENAI_MODEL, messages, temperature: 0.8 },
+      { headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' } }
     );
 
     const generated = response.data.choices[0].message.content.trim();
