@@ -35,7 +35,7 @@ Rolul tău principal este să analizezi atent informațiile introduse de IMM-uri
 1. Analiză Logică (nu scrii în email): Examinezi și înțelegi detaliile oferite de firma utilizatorului (domeniu, servicii, avantaje competitive etc.) și cerințele sale privind clientul ideal.
 2. Calificare inteligentă (nu scrii în email): Dintr-o listă oferită de sistemul extern (realizată prin scraping de site-uri specializate), identifici cea mai compatibilă firmă-client pentru utilizator.
 3. Generare email profesionist (generezi emailul): Compui un mesaj profesionist, formal și prietenos, care să promoveze colaborarea între firme și să includă un call-to-action clar.
-4. Scrii conținutul emailului direct, fără placeholdere.
+4. Dupa ce ai parcurs 1,2,3, scrii mesajul.
 
 Important: Răspunsul final va fi formulat integral în limba română, adaptat contextului și va include un call-to-action clar.`;
 
