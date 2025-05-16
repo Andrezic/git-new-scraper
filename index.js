@@ -18,14 +18,16 @@ app.use(bodyParser.json());
 app.post('/genereaza', async (req, res) => {
   let { firma, lead, userName } = req.body;
 
-  // Dacă lead vine direct
+  // Dacă lead vine direct în payload fără wrapper
   if (!lead && req.body.clientNameText) {
     lead = req.body;
   }
   // Atașăm userName dacă există
-  if (userName) lead.userName = userName;
+  if (userName) {
+    lead.userName = userName;
+  }
 
-  // Fallback firma
+  // Fallback pentru datele firmei
   if (!firma) {
     firma = {
       inputNumeFirma:  lead.inputNumeFirma   || process.env.DEFAULT_NUME_FIRMA   || 'Firma Implicită',
@@ -34,36 +36,52 @@ app.post('/genereaza', async (req, res) => {
     };
   }
 
-  // Validare minimală
-  if (!lead.clientNameText || !lead.clientEmailText) {
-    return res.status(400).json({ success: false, message: 'Lipsă date client.' });
+  // Validare minimă: câmpuri user înainte de AI
+  if (!lead.inputNumeFirma || !lead.inputServicii) {
+    return res.status(400).json({ success: false, message: 'Lipsesc datele firmei necesare.' });
   }
 
   try {
-    // Generează conținutul email-ului
-    const emailBody = await genereazaTextLead(lead);
+    // 1) Apelează AI pentru generarea lead-ului client
+    const aiResult = await genereazaTextLead(lead);
+    const {
+      clientNameText: aiClientName,
+      clientTelefonText: aiClientTelefon,
+      clientWebsiteText: aiClientWebsite,
+      clientEmailText: aiClientEmail,
+      mesajCatreClientText
+    } = aiResult;
 
-    // Trimite email intern (copy)
+    // 2) Trimite email intern cu datele generate
     await trimiteEmailIMM({
       inputNumeFirma:       firma.inputNumeFirma,
       clientEmailText:      INTERNAL_EMAIL,
-      clientNameText:       lead.clientNameText,
-      mesajCatreClientText: emailBody
+      clientNameText:       aiClientName,
+      mesajCatreClientText: mesajCatreClientText
     });
 
-    // Trimite email către client doar dacă switchContactAutomat este activ
+    // 3) Trimite email către client doar dacă switchContactAutomat este activ
     if (lead.switchContactAutomat) {
       await trimiteEmailIMM({
         inputNumeFirma:       firma.inputNumeFirma,
-        clientEmailText:      lead.clientEmailText,
-        clientNameText:       lead.clientNameText,
-        mesajCatreClientText: emailBody
+        clientEmailText:      aiClientEmail,
+        clientNameText:       aiClientName,
+        mesajCatreClientText: mesajCatreClientText
       });
     }
 
-    return res
-      .status(200)
-      .json({ success: true, message: 'Email intern și către client trimise cu succes!', aiEmail: emailBody });
+    // 4) Răspuns API
+    return res.status(200).json({
+      success: true,
+      message: 'Email intern și, dacă a fost activat, și către client au fost trimise cu succes!',
+      lead: {
+        clientNameText: aiClientName,
+        clientTelefonText: aiClientTelefon,
+        clientWebsiteText: aiClientWebsite,
+        clientEmailText: aiClientEmail,
+        mesajCatreClientText
+      }
+    });
   } catch (err) {
     console.error('❌ Eroare trimitere:', err);
     return res.status(500).json({ success: false, error: err.message });
