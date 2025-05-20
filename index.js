@@ -52,7 +52,7 @@ app.post('/genereaza', async (req, res) => {
       mesajCatreClientText
     } = aiResult;
 
-    // 2) Trimite email intern cu datele generate
+        // 2) Email intern
     await trimiteEmailIMM({
       inputNumeFirma:       firma.inputNumeFirma,
       clientEmailText:      INTERNAL_EMAIL,
@@ -60,8 +60,9 @@ app.post('/genereaza', async (req, res) => {
       mesajCatreClientText: mesajCatreClientText
     });
 
-    // 3) Trimite email către client doar dacă switchContactAutomat este activ
-    if (lead.switchContactAutomat) {
+    // 3) Email client doar dacă avem email valid
+-   if (lead.switchContactAutomat) {
++   if (lead.switchContactAutomat && aiClientEmail) {
       await trimiteEmailIMM({
         inputNumeFirma:       firma.inputNumeFirma,
         clientEmailText:      aiClientEmail,
