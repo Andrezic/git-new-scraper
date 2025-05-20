@@ -31,13 +31,12 @@ async function trimiteEmailIMM({
 
   // Construim corpul email-ului în HTML
   const htmlBody = `
-    <h2>Ai un nou Business Match! 🚀</h2>
-    <p><strong>Firmă utilizator:</strong> ${inputNumeFirma}</p>
-    <p><strong>Client:</strong> ${clientNameText}</p>
-    <hr/>
-    <p>${mesajCatreClientText.replace(/
-/g, '<br/>')}</p>
-  `;
+<h2>Ai un nou Business Match! 🚀</h2>
+<p><strong>Firmă utilizator:</strong> ${inputNumeFirma}</p>
+<p><strong>Client:</strong> ${clientNameText}</p>
+<hr/>
+<p>${mesajCatreClientText.replace(/\n/g, '<br/>')}</p>
+`;
 
   const payload = {
     from: {
@@ -51,7 +50,7 @@ async function trimiteEmailIMM({
       }
     ],
     subject: 'Ai un nou Business Match! 🚀',
-    html:    htmlBody
+    html: htmlBody
   };
 
   const response = await fetch(MAILERSEND_URL, {
@@ -74,4 +73,3 @@ async function trimiteEmailIMM({
 }
 
 module.exports = { trimiteEmailIMM };
- = { trimiteEmailIMM };
