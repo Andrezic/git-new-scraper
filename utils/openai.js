@@ -103,18 +103,16 @@ Găsește cel mai potrivit client potențial și completează câmpurile de mai 
     }
 
     return { clientNameText, clientTelefonText, clientWebsiteText, clientEmailText, mesajCatreClientText };
-
   } catch (err) {
-    console.error('❌ Eroare OpenAI:', err.response?.data || err.message);
-    // Fallback lead gol
+-   console.error('❌ Eroare OpenAI:', err.response?.data || err.message);
++   console.error('❌ Eroare OpenAI detaliată:', err.response?.data || err.toString());
     return {
-      clientNameText:       '',
-      clientTelefonText:    '',
-      clientWebsiteText:    '',
-      clientEmailText:      '',
+      clientNameText: '',
+      clientTelefonText: '',
+      clientWebsiteText: '',
+      clientEmailText: '',
       mesajCatreClientText: 'Lead-ul nu a putut fi generat automat.'
     };
   }
-}
 
 module.exports = { genereazaTextLead };
