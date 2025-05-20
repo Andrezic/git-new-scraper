@@ -1,7 +1,7 @@
 // index.js
-const express           = require('express');
-const cors              = require('cors');
-const bodyParser        = require('body-parser');
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
 const { trimiteEmailIMM } = require('./backend/emailService');
 const { genereazaTextLead } = require('./utils/openai');
 require('dotenv').config();
@@ -16,7 +16,7 @@ app.use(bodyParser.json());
 app.post('/genereaza', async (req, res) => {
   let { firma, lead, userName } = req.body;
 
-  // Dacă lead vine direct
+  // Dacă lead vine direct fără wrapper
   if (!lead && req.body.clientNameText) {
     lead = req.body;
   }
@@ -24,7 +24,7 @@ app.post('/genereaza', async (req, res) => {
     lead.userName = userName;
   }
 
-  // Fallback date firmă
+  // Fallback pentru datele firmei
   if (!firma) {
     firma = {
       inputNumeFirma:  lead.inputNumeFirma  || process.env.DEFAULT_NUME_FIRMA  || 'Firma Implicită',
@@ -49,7 +49,7 @@ app.post('/genereaza', async (req, res) => {
       mesajCatreClientText
     } = aiResult;
 
-    // 2) E-mail intern (nu întrerupe fluxul dacă dă eroare)
+    // 2) Trimite email intern (nu întrerupe fluxul dacă dă eroare)
     try {
       await trimiteEmailIMM({
         inputNumeFirma:       firma.inputNumeFirma,
@@ -61,7 +61,7 @@ app.post('/genereaza', async (req, res) => {
       console.error('❌ Eroare trimitere email intern:', errMail);
     }
 
-    // 3) E-mail client doar dacă avem adresă
+    // 3) Trimite email client doar dacă switchContactAutomat e true și avem email valid
     if (lead.switchContactAutomat && aiClientEmail) {
       try {
         await trimiteEmailIMM({

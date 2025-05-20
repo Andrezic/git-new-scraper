@@ -7,7 +7,6 @@ require('dotenv').config();
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_MODEL   = 'gpt-4o';
 
-// Încarcă lista de compatibilități CAEN din fișier markdown
 function loadCaenCompatibilities() {
   const mdPath = path.join(__dirname, '..', 'coduri_CAEN_b2b_detaliat.md');
   try {
@@ -74,17 +73,15 @@ ${caenList}
         model: OPENAI_MODEL,
         messages: [
           { role: 'system', content: systemPrompt.trim() },
-          { role: 'user',    content: userPrompt.trim() }
+          { role: 'user',   content: userPrompt.trim() }
         ],
         temperature: 0.7,
-        timeout: 30000
+        timeout:     30000
       },
       { headers: { Authorization: `Bearer ${OPENAI_API_KEY}` } }
     );
 
     const content = resp.data.choices[0].message.content;
-
-    // Extragem câmpurile obligatorii
     const clientNameText       = (content.match(/#clientNameText\s+(.+)/i) || [])[1]?.trim() || '';
     const clientTelefonText    = (content.match(/#clientTelefonText\s+(.+)/i) || [])[1]?.trim() || '';
     const clientWebsiteText    = (content.match(/#clientWebsiteText\s+(.+)/i) || [])[1]?.trim() || '';
@@ -92,7 +89,6 @@ ${caenList}
     const mesajParts           = content.split(/#mesajCatreClientText/i);
     const mesajCatreClientText = mesajParts[1]?.trim() || '';
 
-    // Validare minimă
     if (!clientNameText || !clientEmailText || !mesajCatreClientText) {
       throw new Error('AI a returnat un lead incomplet.');
     }
