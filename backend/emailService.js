@@ -30,14 +30,12 @@ async function trimiteEmailIMM({
   }
 
   // Construim corpul email-ului în HTML
-  const htmlBody = `
-    <h2>Ai un nou Business Match! 🚀</h2>
-    <p><strong>Firmă utilizator:</strong> ${inputNumeFirma}</p>
-    <p><strong>Client:</strong> ${clientNameText}</p>
-    <hr/>
-    <p>${mesajCatreClientText.replace(/
-/g, '<br/>')}</p>
-  `;
+  const htmlBody = `<h2>Ai un nou Business Match! 🚀</h2>
+<p><strong>Firmă utilizator:</strong> ${inputNumeFirma}</p>
+<p><strong>Client:</strong> ${clientNameText}</p>
+<hr/>
+<p>${mesajCatreClientText.replace(/
+/g, '<br/>')}</p>`;
 
   const payload = {
     from: {
