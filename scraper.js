@@ -5,16 +5,18 @@ const axios     = require('axios');
 
 async function launchBrowser() {
   const executablePath = process.env.CHROME_PATH;
-  if (!executablePath) {
-    throw new Error('Trebuie să setezi CHROME_PATH în .env');
-  }
+  if (!executablePath) throw new Error('Setează CHROME_PATH în .env');
+
+  const proxy = process.env.DATAIMPULSE_PROXY; // “host:port”
+  if (!proxy) throw new Error('Setează DATAIMPULSE_PROXY în .env');
+
   return puppeteer.launch({
     executablePath,
     headless: true,
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
-      `--proxy-server=${process.env.DATAIMPULSE_PROXY}`
+      `--proxy-server=${proxy}`
     ]
   });
 }
@@ -44,13 +46,9 @@ function mapRawToCompanyData(raw) {
 
 (async () => {
   const firmaId = process.env.FIRMA_ID;
-  if (!firmaId) {
-    console.error('Trebuie să setezi FIRMA_ID în .env');
-    process.exit(1);
-  }
-  const apiUrl = process.env.API_BASE_URL;
-  if (!apiUrl) {
-    console.error('Trebuie să setezi API_BASE_URL în .env');
+  const apiUrl  = process.env.API_BASE_URL;
+  if (!firmaId || !apiUrl) {
+    console.error('Trebuie să setezi FIRMA_ID și API_BASE_URL în .env');
     process.exit(1);
   }
 
@@ -59,54 +57,50 @@ function mapRawToCompanyData(raw) {
     browser = await launchBrowser();
     const page = await browser.newPage();
 
-    console.log(`🚀 Navighez la https://www.skywardflow.com/formular-scraper?firmaId=${firmaId}`);
-    await page.goto(`https://www.skywardflow.com/formular-scraper?firmaId=${firmaId}`, {
-      waitUntil: 'networkidle2',
-      timeout: 60000
+    // Autentificare proxy HTTP Basic
+    await page.authenticate({
+      username: process.env.DATAIMPULSE_USER,
+      password: process.env.DATAIMPULSE_PASSWORD
     });
+
+    const url = `https://www.skywardflow.com/formular-scraper?firmaId=${firmaId}`;
+    console.log('🚀 Navighez la', url);
+    await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
+
+    // Așteptăm formularul
     await page.waitForTimeout(3000);
+    let frame = page.frames().find(f => f.url().includes('formular-scraper')) || page;
 
-    // Detectăm iframe, dacă există
-    let frame = page;
-    const formFrame = page.frames().find(f => f.url().includes('formular-scraper'));
-    if (formFrame) {
-      frame = formFrame;
-      console.log('ℹ️ Folosesc iframe de formular:', formFrame.url());
-    }
-
-    // Așteptăm elementele input/textarea
     await frame.waitForSelector('input, textarea', { timeout: 60000 });
 
-    // Colectăm date brute
-    const rawData = await frame.evaluate(fid => {
+    const rawData = await frame.evaluate(fId => {
       const out = {};
       document.querySelectorAll('input, textarea').forEach(el => {
         const key = el.name || el.id;
         if (key) out[key] = el.value.trim();
       });
-      out.firmaId = fid;
+      out.firmaId = fId;
       return out;
     }, firmaId);
 
     console.log('🔍 Raw fields:', rawData);
     const companyData = mapRawToCompanyData(rawData);
 
-    // Adăugăm datele de test
+    // Adăugăm date de test (sau înlocuieşte cu lead real)
     const lead = {
       ...companyData,
       clientNameText:    process.env.TEST_CLIENT_NAME  || 'Client Test Automat',
       clientEmailText:   process.env.TEST_CLIENT_EMAIL || 'client@testmail.com',
       clientTelefonText: process.env.TEST_CLIENT_PHONE || '0712345678'
     };
-    console.log('✅ Lead final pregătit:', lead);
 
-    // Trimitem către backend
-    const response = await axios.post(
+    console.log('✅ Lead pregătit:', lead);
+    const resp = await axios.post(
       `${apiUrl}/genereaza`,
       lead,
       { headers: { 'Content-Type': 'application/json' } }
     );
-    console.log('📤 Răspuns backend:', response.data);
+    console.log('📤 Răspuns backend:', resp.data);
 
   } catch (err) {
     console.error('❌ Eroare în scraper:', err.message || err);
