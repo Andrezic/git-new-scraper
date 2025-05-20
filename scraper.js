@@ -5,7 +5,7 @@ const axios     = require('axios');
 
 async function launchBrowser() {
   return puppeteer.launch({
-    executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    executablePath: process.env.CHROME_PATH,
     headless: true,
     args: [
       '--no-sandbox',

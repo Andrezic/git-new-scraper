@@ -1,7 +1,7 @@
 // index.js
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
+const express           = require('express');
+const cors              = require('cors');
+const bodyParser        = require('body-parser');
 const { trimiteEmailIMM } = require('./backend/emailService');
 const { genereazaTextLead } = require('./utils/openai');
 require('dotenv').config();
@@ -17,14 +17,10 @@ app.post('/genereaza', async (req, res) => {
   let { firma, lead, userName } = req.body;
 
   // Dacă lead vine direct fără wrapper
-  if (!lead && req.body.clientNameText) {
-    lead = req.body;
-  }
-  if (userName) {
-    lead.userName = userName;
-  }
+  if (!lead && req.body.clientNameText) lead = req.body;
+  if (userName) lead.userName = userName;
 
-  // Fallback pentru datele firmei
+  // Fallback date firmă
   if (!firma) {
     firma = {
       inputNumeFirma:  lead.inputNumeFirma  || process.env.DEFAULT_NUME_FIRMA  || 'Firma Implicită',

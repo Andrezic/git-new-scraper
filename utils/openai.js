@@ -1,13 +1,14 @@
 // utils/openai.js
-const fs   = require('fs');
-const path = require('path');
+const fs    = require('fs');
+const path  = require('path');
 const axios = require('axios');
 require('dotenv').config();
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_MODEL   = 'gpt-4o';
 
-function loadCaenCompatibilities() {
+// Încarcă lista compatibilităților CAEN
+default function loadCaenCompatibilities() {
   const mdPath = path.join(__dirname, '..', 'coduri_CAEN_b2b_detaliat.md');
   try {
     return fs.readFileSync(mdPath, 'utf-8');
@@ -22,21 +23,21 @@ async function genereazaTextLead(lead) {
 
   const systemPrompt = `
 Ești echipa Skyward Flow (GPT-4.o), formată din 4 roluri specializate în găsirea și calificarea
-oportunităților de afaceri. Scopul tău: să livrezi lead-uri relevante și mesaje profesionale.
+opportunităților de afaceri. Scopul tău: să livrezi lead-uri relevante și mesaje profesionale.
 
 Flux:
-1. Mara (Web Search Master) – găsește potențiali clienți.
-2. Alex (Data Validator) – validează datele.
-3. Radu (Business Analyzer) – aplică scor și alege lead.
-4. Ana (Email Sender) – compune e-mailul.
+- Mara (Web Search Master)
+- Alex (Data Validator)
+- Radu (Business Analyzer)
+- Ana (Email Sender)
 
-Răspunde **doar** în acest format, fără comentarii adiționale:
+Răspunde **doar** în formatul strict de mai jos:
 #clientNameText <Nume client>
 #clientTelefonText <Telefon client>
 #clientWebsiteText <Website client>
 #clientEmailText <Email client>
 #mesajCatreClientText
-<Text complet al e-mailului de propunere>
+<Text complet al emailului de propunere>
 `;
 
   const userPrompt = `
@@ -67,14 +68,21 @@ ${caenList}
 `;
 
   try {
-    const response = await axios.post(
-  'https://api.openai.com/v1/chat/completions',
-  { model: OPENAI_API_KEY, messages, temperature: 0.7 },
-  {
-    headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
-    timeout: 30000
-  }
-);
+    const resp = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        model:       OPENAI_MODEL,
+        messages: [
+          { role: 'system',  content: systemPrompt.trim() },
+          { role: 'user',    content: userPrompt.trim() }
+        ],
+        temperature: 0.7
+      },
+      {
+        headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
+        timeout: 30000
+      }
+    );
 
     const content = resp.data.choices[0].message.content;
     const clientNameText       = (content.match(/#clientNameText\s+(.+)/i) || [])[1]?.trim() || '';
