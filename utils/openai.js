@@ -67,19 +67,14 @@ ${caenList}
 `;
 
   try {
-    const resp = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
-      {
-        model: OPENAI_MODEL,
-        messages: [
-          { role: 'system', content: systemPrompt.trim() },
-          { role: 'user',   content: userPrompt.trim() }
-        ],
-        temperature: 0.7,
-        timeout:     30000
-      },
-      { headers: { Authorization: `Bearer ${OPENAI_API_KEY}` } }
-    );
+    const response = await axios.post(
+  'https://api.openai.com/v1/chat/completions',
+  { model: OPENAI_API_KEY, messages, temperature: 0.7 },
+  {
+    headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
+    timeout: 30000
+  }
+);
 
     const content = resp.data.choices[0].message.content;
     const clientNameText       = (content.match(/#clientNameText\s+(.+)/i) || [])[1]?.trim() || '';
