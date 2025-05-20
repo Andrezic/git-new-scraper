@@ -16,7 +16,7 @@ app.use(bodyParser.json());
 app.post('/genereaza', async (req, res) => {
   let { firma, lead, userName } = req.body;
 
-  // Dacă lead vine direct fără wrapper
+  // Dacă lead vine direct
   if (!lead && req.body.clientNameText) {
     lead = req.body;
   }
@@ -24,7 +24,7 @@ app.post('/genereaza', async (req, res) => {
     lead.userName = userName;
   }
 
-  // Fallback pentru datele firmei
+  // Fallback date firmă
   if (!firma) {
     firma = {
       inputNumeFirma:  lead.inputNumeFirma  || process.env.DEFAULT_NUME_FIRMA  || 'Firma Implicită',
@@ -35,10 +35,7 @@ app.post('/genereaza', async (req, res) => {
 
   // Validare minimă
   if (!lead.inputNumeFirma || !lead.inputServicii) {
-    return res.status(400).json({
-      success: false,
-      message: 'Lipsesc datele firmei necesare.'
-    });
+    return res.status(400).json({ success: false, message: 'Lipsesc datele firmei necesare.' });
   }
 
   try {
@@ -52,7 +49,7 @@ app.post('/genereaza', async (req, res) => {
       mesajCatreClientText
     } = aiResult;
 
-    // 2) Trimite email intern (nu oprește fluxul dacă dă eroare)
+    // 2) E-mail intern (nu întrerupe fluxul dacă dă eroare)
     try {
       await trimiteEmailIMM({
         inputNumeFirma:       firma.inputNumeFirma,
@@ -60,11 +57,11 @@ app.post('/genereaza', async (req, res) => {
         clientNameText:       aiClientName,
         mesajCatreClientText
       });
-    } catch (mailErr) {
-      console.error('❌ Eroare trimitere email intern:', mailErr);
+    } catch (errMail) {
+      console.error('❌ Eroare trimitere email intern:', errMail);
     }
 
-    // 3) Trimite email client doar dacă avem adresa
+    // 3) E-mail client doar dacă avem adresă
     if (lead.switchContactAutomat && aiClientEmail) {
       try {
         await trimiteEmailIMM({
@@ -73,22 +70,16 @@ app.post('/genereaza', async (req, res) => {
           clientNameText:       aiClientName,
           mesajCatreClientText
         });
-      } catch (mailErr) {
-        console.error('❌ Eroare trimitere email client:', mailErr);
+      } catch (errMail) {
+        console.error('❌ Eroare trimitere email client:', errMail);
       }
     }
 
     // 4) Răspuns API
     return res.status(200).json({
       success: true,
-      message: 'Email intern și, dacă a fost activat, și către client au fost trimise cu succes!',
-      lead: {
-        clientNameText:      aiClientName,
-        clientTelefonText:   aiClientTelefon,
-        clientWebsiteText:   aiClientWebsite,
-        clientEmailText:     aiClientEmail,
-        mesajCatreClientText
-      }
+      message: 'Lead generat și email-urile (intern și/sau client) au fost procesate.',
+      lead: aiResult
     });
 
   } catch (err) {
@@ -97,6 +88,4 @@ app.post('/genereaza', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server online pe portul ${PORT}`);
-});
+app.listen(PORT, () => console.log(`🚀 Server online pe portul ${PORT}`));
