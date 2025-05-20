@@ -7,8 +7,7 @@ require('dotenv').config();
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_MODEL   = 'gpt-4o';
 
-// Încarcă lista compatibilităților CAEN
-default function loadCaenCompatibilities() {
+function loadCaenCompatibilities() {
   const mdPath = path.join(__dirname, '..', 'coduri_CAEN_b2b_detaliat.md');
   try {
     return fs.readFileSync(mdPath, 'utf-8');
@@ -70,18 +69,11 @@ ${caenList}
   try {
     const resp = await axios.post(
       'https://api.openai.com/v1/chat/completions',
-      {
-        model:       OPENAI_MODEL,
-        messages: [
-          { role: 'system',  content: systemPrompt.trim() },
-          { role: 'user',    content: userPrompt.trim() }
-        ],
-        temperature: 0.7
-      },
-      {
-        headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
-        timeout: 30000
-      }
+      { model: OPENAI_MODEL, messages: [
+          { role: 'system', content: systemPrompt.trim() },
+          { role: 'user',   content: userPrompt.trim() }
+      ], temperature: 0.7 },
+      { headers: { Authorization: `Bearer ${OPENAI_API_KEY}` }, timeout: 30000 }
     );
 
     const content = resp.data.choices[0].message.content;
@@ -96,17 +88,10 @@ ${caenList}
       throw new Error('AI a returnat un lead incomplet.');
     }
 
-    return { clientNameText, clientTelefonText, clientWebsiteText, clientEmailText, mesajCatreClientText };
-
+    return { clientNameText, clientTelefonText, clientWebsiteText, clientAddressText: clientEmailText, mesajCatreClientText };
   } catch (err) {
     console.error('❌ Eroare OpenAI detaliată:', err.response?.data || err.message);
-    return {
-      clientNameText:       '',
-      clientTelefonText:    '',
-      clientWebsiteText:    '',
-      clientEmailText:      '',
-      mesajCatreClientText: 'Lead-ul nu a putut fi generat automat.'
-    };
+    return { clientNameText: '', clientTelefonText: '', clientWebsiteText: '', clientEmailText: '', mesajCatreClientText: 'Lead-ul nu a putut fi generat automat.' };
   }
 }
 

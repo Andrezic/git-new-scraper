@@ -16,11 +16,9 @@ app.use(bodyParser.json());
 app.post('/genereaza', async (req, res) => {
   let { firma, lead, userName } = req.body;
 
-  // Dacă lead vine direct fără wrapper
   if (!lead && req.body.clientNameText) lead = req.body;
   if (userName) lead.userName = userName;
 
-  // Fallback date firmă
   if (!firma) {
     firma = {
       inputNumeFirma:  lead.inputNumeFirma  || process.env.DEFAULT_NUME_FIRMA  || 'Firma Implicită',
@@ -29,13 +27,11 @@ app.post('/genereaza', async (req, res) => {
     };
   }
 
-  // Validare minimă
   if (!lead.inputNumeFirma || !lead.inputServicii) {
     return res.status(400).json({ success: false, message: 'Lipsesc datele firmei necesare.' });
   }
 
   try {
-    // 1) Generare lead cu AI
     const aiResult = await genereazaTextLead(lead);
     const {
       clientNameText:      aiClientName,
@@ -45,7 +41,6 @@ app.post('/genereaza', async (req, res) => {
       mesajCatreClientText
     } = aiResult;
 
-    // 2) Trimite email intern (nu întrerupe fluxul dacă dă eroare)
     try {
       await trimiteEmailIMM({
         inputNumeFirma:       firma.inputNumeFirma,
@@ -57,7 +52,6 @@ app.post('/genereaza', async (req, res) => {
       console.error('❌ Eroare trimitere email intern:', errMail);
     }
 
-    // 3) Trimite email client doar dacă switchContactAutomat e true și avem email valid
     if (lead.switchContactAutomat && aiClientEmail) {
       try {
         await trimiteEmailIMM({
@@ -71,7 +65,6 @@ app.post('/genereaza', async (req, res) => {
       }
     }
 
-    // 4) Răspuns API
     return res.status(200).json({
       success: true,
       message: 'Lead generat și email-urile (intern și/sau client) au fost procesate.',
