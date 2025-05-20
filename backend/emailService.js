@@ -73,6 +73,4 @@ async function trimiteEmailIMM({
   return { success: true };
 }
 
-module.exports = {
-  trimiteEmailIMM
-};
+module.exports = { trimiteEmailIMM };
