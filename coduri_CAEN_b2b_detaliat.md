@@ -1,60 +1,59 @@
+IMPORTANT! - Considera compatibilitatea codurilor CAEN ca punct de pornire/filtrare, nu ca factor principal al compatibilitatii.
+
+
 # Coduri CAEN compatibile pentru relații B2B în România - Analiză detaliată
 
 
 Agricultură și Industrie alimentară
-0111 Cultivarea cerealelor,
-plantelor leguminoase și
-a plantelor producătoare de
-semințe oleaginoase
+
+0111 Cultivarea cerealelor, plantelor leguminoase și a plantelor producătoare de semințe oleaginoase
 0161, 0163, 0164, 1061, 1091, 4611, 4617,
 4621, 4675, 4776, 5224, 7731
+
 0141 Creșterea bovinelor de lapte 0162, 1051, 1089, 4611, 4623, 4633
-1031 Prelucrarea și conservarea
-cartofilor
+
+1031 Prelucrarea și conservarea cartofilor
 0113, 1032, 4631, 4711
+
 0128 Cultivarea plantelor pentru
 condimente și a plantelor
-aromatice
-1084, 4637, 4791
+aromatice 1084, 4637, 4791
 
 Producție și Construcții
 2910 Fabricarea autovehiculelor 2931, 2932, 4520, 4531, 7112
-2611 Fabricarea componentelor
-electronice
-2612, 2620, 4652, 6201, 7112
-4120 
 
-Lucrări de construcții a
+2611 Fabricarea componentelor electronice
+2612, 2620, 4652, 6201, 7112
+
+4120 Lucrări de construcții a
 clădirilor rezidențiale și
-nerezidențiale
-2511, 4211, 4212, 4213, 4311, 4312, 4321,
+nerezidențiale 2511, 4211, 4212, 4213, 4311, 4312, 4321,
 4322, 4329, 4331, 4332, 4333, 4334, 4339,
 4391, 4399, 4613, 4673, 4674, 7111, 7112
-2229 Fabricarea altor produse din
-plastic
+
+2229 Fabricarea altor produse din plastic
 4120, 4332, 4673
 
 Comerț
 4791 Comerț cu amănuntul efectuat prin corespondență sau
-online
-4611, 4613, 4614, 4617, 4631, 4632, 4633,
+online 4611, 4613, 4614, 4617, 4631, 4632, 4633,
 4634, 4637, 4638, 4639, 4641, 4642, 4647,
 4652, 6201, 6311, 7311, 7312
+
 4632 Comerț cu ridicata al cărnii și
 produselor din carne
 1011, 1012, 1013, 4722, 5224, 5229
 
 IT și Comunicații
+
 6201 Activități de realizare a softului la comandă 5829, 6202, 6203, 6209, 6311, 6312, 6399, 7022, 7311, 7312, 7490, 8020
 6203 Managementul sistemelor informatice 6201, 6202, 6209, 6311, 6312, 8020
 8020 Activități de servicii de securitate 6201, 6202, 6209, 6311
+
 Energie regenerabilă
 3511 Producția de energie electrică 3514, 4321, 4669, 7112
 3514 Comerț cu energie electrică 3511, 4321, 4669, 7112
 4329 Alte lucrări de instalații 3511, 3514, 4669
-
-
-
 
 
 Agricultură și Silvicultură
@@ -63,11 +62,9 @@ Cultivarea cerealelor
 0161, 1061, 4611, 4621, 4675
 
 
-
 0141
 Creșterea bovinelor de lapte
 0162, 1051, 1089, 4633, 4722
-
 
 
 0210
