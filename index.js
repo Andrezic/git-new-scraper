@@ -10,11 +10,15 @@ app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 3000;
 
+app.get('/', (req, res) => {
+  res.send('✅ Skyward Scraper server este activ.');
+});
+
 app.post('/genereaza', async (req, res) => {
   const firmaId = req.body.firmaId;
 
   try {
-    // 🔍 Caută firma în colecția ProfilFirme
+    // Obține firma din CMS Wix
     const firmaResponse = await axios.get(`https://www.skywardflow.com/_functions/firmabyid/${firmaId}`);
     const firma = firmaResponse.data.firma;
 
@@ -22,25 +26,19 @@ app.post('/genereaza', async (req, res) => {
       return res.status(404).json({ error: "Firma nu a fost găsită în CMS." });
     }
 
-    // ✅ Log complet pentru debugging
-    console.log("✅ Firma completă:", JSON.stringify(firma, null, 2));
-    console.log("🎯 Email extras din firma:", firma.inputEmailFirma);
+    console.log("📦 Firma completă primit de la Wix:", JSON.stringify(firma, null, 2));
+    console.log("🎯 Email extras din firma:", firma.inputEmailFirma); // Aici vezi dacă e undefined
 
-    // 🧠 Generează lead cu AI
     const lead = await genereazaLeadAI(firma);
 
     if (!lead || !lead.clientNameText) {
-      return res.status(500).json({ error: "Leadul generat de AI este invalid." });
+      return res.status(500).json({ error: "Leadul generat este invalid." });
     }
 
-    // ✅ Adaugă userEmail din firma și firmaId
-    lead.userEmail = firma.inputEmailFirma;
+    lead.userEmail = firma.inputEmailFirma; // verificăm în log dacă e valid
     lead.firmaId = firmaId;
 
-    console.log("📩 Email utilizator pentru dashboard:", lead.userEmail);
-
-    // 🚀 Trimite leadul complet la Wix
-    const cmsResponse = await axios.post(
+    const response = await axios.post(
       'https://www.skywardflow.com/_functions/genereaza',
       lead,
       {
@@ -51,8 +49,8 @@ app.post('/genereaza', async (req, res) => {
       }
     );
 
-    console.log("✅ Lead salvat:", cmsResponse.data);
-    res.status(200).json({ success: true, lead: cmsResponse.data });
+    console.log("✅ Lead salvat în CMS:", response.data);
+    res.status(200).json({ success: true, lead: response.data });
 
   } catch (error) {
     console.error("❌ Eroare generală:", error?.response?.data || error.message);
