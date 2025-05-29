@@ -1,12 +1,13 @@
-import express from 'express';
-import axios from 'axios';
-import dotenv from 'dotenv';
-import bodyParser from 'body-parser';
-import { genereazaLeadAI } from './utils/openai.js';
+const express = require('express');
+const axios = require('axios');
+const dotenv = require('dotenv');
+const bodyParser = require('body-parser');
+const { genereazaLeadAI } = require('./utils/openai.js');
 
 dotenv.config();
 const app = express();
 app.use(bodyParser.json());
+
 
 const PORT = process.env.PORT || 3000;
 
