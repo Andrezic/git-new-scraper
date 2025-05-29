@@ -8,14 +8,13 @@ dotenv.config();
 const app = express();
 app.use(bodyParser.json());
 
-
 const PORT = process.env.PORT || 3000;
 
 app.post('/genereaza', async (req, res) => {
   const firmaId = req.body.firmaId;
 
   try {
-    // 1. Caută firma completată de utilizator
+    // 🔍 Caută firma în colecția ProfilFirme
     const firmaResponse = await axios.get(`https://www.skywardflow.com/_functions/firmabyid/${firmaId}`);
     const firma = firmaResponse.data.firma;
 
@@ -23,20 +22,22 @@ app.post('/genereaza', async (req, res) => {
       return res.status(404).json({ error: "Firma nu a fost găsită în CMS." });
     }
 
-    console.log("✅ Firma returnată:", firma);
+    console.log("✅ Firma găsită:", firma);
 
-    // 2. Generează leadul cu AI
+    // 🧠 Generează lead cu AI
     const lead = await genereazaLeadAI(firma);
 
     if (!lead || !lead.clientNameText) {
       return res.status(500).json({ error: "Leadul generat de AI este invalid." });
     }
 
-    // 3. Adaugă automat emailul utilizatorului (pentru Dashboard)
-    lead.userEmail = firma.inputEmailFirma;
+    // ✅ Setează userEmail automat (pentru Dashboard)
+    lead.userEmail = firma.inputEmailFirma;  // <- AICI e fixul!
     lead.firmaId = firmaId;
 
-    // 4. Trimite leadul în CMS (colecția Leaduri)
+    console.log("📩 Email utilizator pentru dashboard:", lead.userEmail);
+
+    // 🚀 Trimite leadul în CMS
     const cmsResponse = await axios.post(
       'https://www.skywardflow.com/_functions/genereaza',
       lead,
@@ -48,7 +49,7 @@ app.post('/genereaza', async (req, res) => {
       }
     );
 
-    console.log("✅ Lead salvat în CMS:", cmsResponse.data);
+    console.log("✅ Lead salvat:", cmsResponse.data);
     res.status(200).json({ success: true, lead: cmsResponse.data });
 
   } catch (error) {
