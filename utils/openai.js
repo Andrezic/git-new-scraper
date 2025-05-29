@@ -1,98 +1,82 @@
-// utils/openai.js
-const fs    = require('fs');
-const path  = require('path');
 const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
+
 require('dotenv').config();
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const OPENAI_MODEL   = 'gpt-4o';
 
-function loadCaenCompatibilities() {
-  const mdPath = path.join(__dirname, '..', 'coduri_CAEN_b2b_detaliat.md');
-  try {
-    return fs.readFileSync(mdPath, 'utf-8');
-  } catch (err) {
-    console.warn('⚠️ Nu am putut încărca coduri_CAEN_b2b_detaliat.md:', err.message);
-    return '';
-  }
+async function genereazaLeadAI(firma) {
+  const prompt = `
+Tu ești cel mai bun agent AI de Business Match B2B.
+Rolul tău este să analizezi datele firmei și să identifici un lead potrivit, apoi să generezi un mesaj personalizat către client.
+
+📌 Date firmă:
+- Nume firmă: ${firma.inputNumeFirma}
+- Servicii: ${firma.inputServicii}
+- Prețuri: ${firma.inputPreturi}
+- Avantaje: ${firma.inputAvantaje}
+- Cod CAEN: ${firma.inputCodCaen}
+- Tip clienți: ${firma.inputTipClienti}
+- Locație țintită: ${firma.inputTintireGeo?.formatted || 'Nespecificat'}
+- Cuvinte cheie: ${firma.inputKeywords}
+
+📦 Acum, inventează un lead imaginar pentru test.
+Completează următoarele câmpuri:
+
+1. Numele clientului (clientNameText)
+2. Email client (clientEmailText)
+3. Website client (clientWebsiteText)
+4. Telefon client (clientTelefonText)
+5. Mesaj AI pentru client (mesajCatreClientText)
+
+🔁 Returnează obiectul ca JSON, cu exact aceste chei:
+{
+  "clientNameText": "...",
+  "clientEmailText": "...",
+  "clientWebsiteText": "...",
+  "clientTelefonText": "...",
+  "mesajCatreClientText": "..."
 }
 
-async function genereazaTextLead(lead) {
-  const caenList = loadCaenCompatibilities();
+Limita de text este de 400 caractere pentru mesaj. Ton: profesional, prietenos, captivant.`;
 
-  const systemPrompt = `
-Ești echipa Skyward Flow (GPT-4.o), formată din 4 roluri specializate în găsirea și calificarea
-opportunităților de afaceri. Scopul tău: să livrezi lead-uri relevante și mesaje profesionale.
-
-Flux:
-- Mara (Web Search Master)
-- Alex (Data Validator)
-- Radu (Business Analyzer)
-- Ana (Email Sender)
-
-Răspunde **doar** în formatul strict de mai jos:
-#clientNameText <Nume client>
-#clientTelefonText <Telefon client>
-#clientWebsiteText <Website client>
-#clientEmailText <Email client>
-#mesajCatreClientText
-<Text complet al emailului de propunere>
-`;
-
-  const userPrompt = `
-Date firmă:
-- Cod CAEN: ${lead.inputCodCaen}
-- CUI: ${lead.inputCui}
-- Nr. angajați: ${lead.inputNumarAngajati}
-- Nume firmă: ${lead.inputNumeFirma}
-- Servicii: ${lead.inputServicii}
-- Prețuri: ${lead.inputPreturi}
-- Avantaje: ${lead.inputAvantaje}
-- Telefon firmă: ${lead.inputTelefonFirma}
-- Email firmă: ${lead.inputEmailFirma}
-- Website firmă: ${lead.inputWebsiteFirma}
-- Localizare: ${lead.inputLocalizare}
-
-Specificații client:
-- Tip clienți: ${lead.inputTipClienti}
-- Dimensiune client: ${lead.inputDimensiuneClient}
-- Cuvinte cheie: ${lead.inputKeywords}
-- Cerințe extra: ${lead.inputCerinteExtra}
-- Țintire geo: ${lead.inputTintireGeo}
-
-Compatibilități CAEN:
-\`\`\`markdown
-${caenList}
-\`\`\`
-`;
-
-  try {
-    const resp = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
-      { model: OPENAI_MODEL, messages: [
-          { role: 'system', content: systemPrompt.trim() },
-          { role: 'user',   content: userPrompt.trim() }
-      ], temperature: 0.7 },
-      { headers: { Authorization: `Bearer ${OPENAI_API_KEY}` }, timeout: 30000 }
-    );
-
-    const content = resp.data.choices[0].message.content;
-    const clientNameText       = (content.match(/#clientNameText\s+(.+)/i) || [])[1]?.trim() || '';
-    const clientTelefonText    = (content.match(/#clientTelefonText\s+(.+)/i) || [])[1]?.trim() || '';
-    const clientWebsiteText    = (content.match(/#clientWebsiteText\s+(.+)/i) || [])[1]?.trim() || '';
-    const clientEmailText      = (content.match(/#clientEmailText\s+(.+)/i) || [])[1]?.trim() || '';
-    const mesajParts           = content.split(/#mesajCatreClientText/i);
-    const mesajCatreClientText = mesajParts[1]?.trim() || '';
-
-    if (!clientNameText || !clientEmailText || !mesajCatreClientText) {
-      throw new Error('AI a returnat un lead incomplet.');
+  const response = await axios.post(
+    'https://api.openai.com/v1/chat/completions',
+    {
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'system',
+          content: 'Ești un agent AI specializat în generare de leaduri B2B.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 600
+    },
+    {
+      headers: {
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+      }
     }
+  );
 
-    return { clientNameText, clientTelefonText, clientWebsiteText, clientEmailText, mesajCatreClientText };
-  } catch (err) {
-    console.error('❌ Eroare OpenAI detaliată:', err.response?.data || err.message);
-    return { clientNameText: '', clientTelefonText: '', clientWebsiteText: '', clientEmailText: '', mesajCatreClientText: 'Lead-ul nu a putut fi generat automat.' };
+  const text = response.data.choices[0].message.content;
+  let json;
+
+  try {
+    json = JSON.parse(text);
+  } catch (e) {
+    console.error("❌ Eroare parsare JSON:", e.message);
+    throw new Error("Răspunsul AI nu este un JSON valid.");
   }
+
+  return json;
 }
 
-module.exports = { genereazaTextLead };
+module.exports = { genereazaLeadAI };
