@@ -22,7 +22,7 @@ app.post('/genereaza', async (req, res) => {
       return res.status(404).json({ error: "Firma nu a fost găsită în CMS." });
     }
 
-    console.log("✅ Firma găsită:", firma);
+    console.log("📦 Firma completă:", JSON.stringify(firma, null, 2));
 
     // 🧠 Generează lead cu AI
     const lead = await genereazaLeadAI(firma);
