@@ -22,7 +22,8 @@ app.post('/genereaza', async (req, res) => {
       return res.status(404).json({ error: "Firma nu a fost găsită în CMS." });
     }
 
-    console.log("📦 Firma completă:", JSON.stringify(firma, null, 2));
+    // ✅ Afișează tot obiectul firmei pentru debug
+    console.log("✅ Firma completă:", JSON.stringify(firma, null, 2));
 
     // 🧠 Generează lead cu AI
     const lead = await genereazaLeadAI(firma);
@@ -31,8 +32,8 @@ app.post('/genereaza', async (req, res) => {
       return res.status(500).json({ error: "Leadul generat de AI este invalid." });
     }
 
-    // ✅ Setează userEmail automat (pentru Dashboard)
-    lead.userEmail = firma.inputEmailFirma;  // <- AICI e fixul!
+    // ✅ Setează userEmail pentru Dashboard (ajustăm după ce vedem logul complet)
+    lead.userEmail = firma.inputEmailFirma;
     lead.firmaId = firmaId;
 
     console.log("📩 Email utilizator pentru dashboard:", lead.userEmail);
