@@ -1,8 +1,6 @@
 const axios = require('axios');
-const fs = require('fs');
-const path = require('path');
-
-require('dotenv').config();
+const dotenv = require('dotenv');
+dotenv.config();
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
@@ -46,14 +44,8 @@ Limita de text este de 400 caractere pentru mesaj. Ton: profesional, prietenos, 
     {
       model: 'gpt-4o',
       messages: [
-        {
-          role: 'system',
-          content: 'Ești un agent AI specializat în generare de leaduri B2B.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
+        { role: 'system', content: 'Ești un agent AI specializat în generare de leaduri B2B.' },
+        { role: 'user', content: prompt }
       ],
       temperature: 0.7,
       max_tokens: 600

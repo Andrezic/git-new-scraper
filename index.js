@@ -2,7 +2,10 @@ const express = require('express');
 const axios = require('axios');
 const dotenv = require('dotenv');
 const bodyParser = require('body-parser');
-const { genereazaLeadAI } = require('./utils/openai.js');
+const path = require('path');
+
+// Fix import corect din /utils/openai.js
+const { genereazaLeadAI } = require('./utils/openai');
 
 dotenv.config();
 const app = express();
@@ -27,7 +30,7 @@ app.post('/genereaza', async (req, res) => {
     }
 
     console.log("📦 Firma completă primit de la Wix:", JSON.stringify(firma, null, 2));
-    console.log("🎯 Email extras din firma:", firma.inputEmailFirma); // Aici vezi dacă e undefined
+    console.log("🎯 Email extras din firma:", firma.inputEmailFirma);
 
     const lead = await genereazaLeadAI(firma);
 
@@ -35,7 +38,7 @@ app.post('/genereaza', async (req, res) => {
       return res.status(500).json({ error: "Leadul generat este invalid." });
     }
 
-    lead.userEmail = firma.inputEmailFirma; // verificăm în log dacă e valid
+    lead.userEmail = firma.inputEmailFirma || "";
     lead.firmaId = firmaId;
 
     const response = await axios.post(
