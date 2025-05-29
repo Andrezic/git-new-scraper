@@ -1,80 +1,61 @@
-// index.js
-const express           = require('express');
-const cors              = require('cors');
-const bodyParser        = require('body-parser');
-const { trimiteEmailIMM } = require('./backend/emailService');
-const { genereazaTextLead } = require('./utils/openai');
-require('dotenv').config();
+import express from 'express';
+import axios from 'axios';
+import dotenv from 'dotenv';
+import bodyParser from 'body-parser';
+import { genereazaLeadAI } from './utils/openai.js';
 
+dotenv.config();
 const app = express();
-const PORT = process.env.PORT || 3000;
-const INTERNAL_EMAIL = process.env.INTERNAL_EMAIL || 'skywardflow@gmail.com';
-
-app.use(cors());
 app.use(bodyParser.json());
 
+const PORT = process.env.PORT || 3000;
+
 app.post('/genereaza', async (req, res) => {
-  let { firma, lead, userName } = req.body;
-
-  if (!lead && req.body.clientNameText) lead = req.body;
-  if (userName) lead.userName = userName;
-
-  if (!firma) {
-    firma = {
-      inputNumeFirma:  lead.inputNumeFirma  || process.env.DEFAULT_NUME_FIRMA  || 'Firma Implicită',
-      inputEmailFirma: lead.inputEmailFirma || process.env.DEFAULT_EMAIL_FIRMA || '',
-      contactAutomat:  process.env.DEFAULT_CONTACT_AUTOMAT === 'true'
-    };
-  }
-
-  if (!lead.inputNumeFirma || !lead.inputServicii) {
-    return res.status(400).json({ success: false, message: 'Lipsesc datele firmei necesare.' });
-  }
+  const firmaId = req.body.firmaId;
 
   try {
-    const aiResult = await genereazaTextLead(lead);
-    const {
-      clientNameText:      aiClientName,
-      clientTelefonText:   aiClientTelefon,
-      clientWebsiteText:   aiClientWebsite,
-      clientEmailText:     aiClientEmail,
-      mesajCatreClientText
-    } = aiResult;
+    // 1. Caută firma completată de utilizator
+    const firmaResponse = await axios.get(`https://www.skywardflow.com/_functions/firmabyid/${firmaId}`);
+    const firma = firmaResponse.data.firma;
 
-    try {
-      await trimiteEmailIMM({
-        inputNumeFirma:       firma.inputNumeFirma,
-        clientEmailText:      INTERNAL_EMAIL,
-        clientNameText:       aiClientName,
-        mesajCatreClientText
-      });
-    } catch (errMail) {
-      console.error('❌ Eroare trimitere email intern:', errMail);
+    if (!firma) {
+      return res.status(404).json({ error: "Firma nu a fost găsită în CMS." });
     }
 
-    if (lead.switchContactAutomat && aiClientEmail) {
-      try {
-        await trimiteEmailIMM({
-          inputNumeFirma:       firma.inputNumeFirma,
-          clientEmailText:      aiClientEmail,
-          clientNameText:       aiClientName,
-          mesajCatreClientText
-        });
-      } catch (errMail) {
-        console.error('❌ Eroare trimitere email client:', errMail);
+    console.log("✅ Firma returnată:", firma);
+
+    // 2. Generează leadul cu AI
+    const lead = await genereazaLeadAI(firma);
+
+    if (!lead || !lead.clientNameText) {
+      return res.status(500).json({ error: "Leadul generat de AI este invalid." });
+    }
+
+    // 3. Adaugă automat emailul utilizatorului (pentru Dashboard)
+    lead.userEmail = firma.inputEmailFirma;
+    lead.firmaId = firmaId;
+
+    // 4. Trimite leadul în CMS (colecția Leaduri)
+    const cmsResponse = await axios.post(
+      'https://www.skywardflow.com/_functions/genereaza',
+      lead,
+      {
+        headers: {
+          'Authorization': 'SecretKeySkyward',
+          'Content-Type': 'application/json'
+        }
       }
-    }
+    );
 
-    return res.status(200).json({
-      success: true,
-      message: 'Lead generat și email-urile (intern și/sau client) au fost procesate.',
-      lead: aiResult
-    });
+    console.log("✅ Lead salvat în CMS:", cmsResponse.data);
+    res.status(200).json({ success: true, lead: cmsResponse.data });
 
-  } catch (err) {
-    console.error('❌ Eroare fatală în /genereaza:', err);
-    return res.status(500).json({ success: false, error: err.message });
+  } catch (error) {
+    console.error("❌ Eroare generală:", error?.response?.data || error.message);
+    res.status(500).json({ error: error?.response?.data || error.message });
   }
 });
 
-app.listen(PORT, () => console.log(`🚀 Server online pe portul ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🚀 Serverul rulează pe portul ${PORT}`);
+});
