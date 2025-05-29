@@ -24,6 +24,7 @@ app.post('/genereaza', async (req, res) => {
 
     // ✅ Log complet pentru debugging
     console.log("✅ Firma completă:", JSON.stringify(firma, null, 2));
+    console.log("🎯 Email extras din firma:", firma.inputEmailFirma);
 
     // 🧠 Generează lead cu AI
     const lead = await genereazaLeadAI(firma);
