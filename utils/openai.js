@@ -88,7 +88,7 @@ ${caenList}
       throw new Error('AI a returnat un lead incomplet.');
     }
 
-    return { clientNameText, clientTelefonText, clientWebsiteText, clientAddressText: clientEmailText, mesajCatreClientText };
+    return { clientNameText, clientTelefonText, clientWebsiteText, clientEmailText, mesajCatreClientText };
   } catch (err) {
     console.error('❌ Eroare OpenAI detaliată:', err.response?.data || err.message);
     return { clientNameText: '', clientTelefonText: '', clientWebsiteText: '', clientEmailText: '', mesajCatreClientText: 'Lead-ul nu a putut fi generat automat.' };
