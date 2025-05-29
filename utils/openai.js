@@ -58,13 +58,17 @@ Limita de text este de 400 caractere pentru mesaj. Ton: profesional, prietenos, 
     }
   );
 
-  const text = response.data.choices[0].message.content;
-  let json;
+  let text = response.data.choices[0].message.content;
 
+  // 🔥 Eliminăm orice blocuri Markdown (```json ... ```)
+  text = text.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
+
+  let json;
   try {
     json = JSON.parse(text);
   } catch (e) {
     console.error("❌ Eroare parsare JSON:", e.message);
+    console.error("📄 Răspuns brut AI:", text);
     throw new Error("Răspunsul AI nu este un JSON valid.");
   }
 
