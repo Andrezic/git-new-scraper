@@ -45,16 +45,10 @@ ${coduriCaenContent}
 - Call to action clar
 - Semnătură cu ${firmaUtilizator.inputNumeFirma}
 
-⚠️ Dacă leadul nu este valid, răspunde doar cu explicația. Nu inventa niciun lead!
+⚠️ Dacă leadul NU este valid, răspunde EXCLUSIV în format JSON:
+{ "error": "Explică clar de ce leadul nu este valid sau compatibil." }
 
-✅ Outputul final trebuie să conțină:
-- clientNameText
-- clientEmailText
-- clientWebsiteText
-- clientTelefonText
-- mesajCatreClientText
-
-⚠️ Dacă leadul este valid, răspunde EXCLUSIV în format JSON:
+✅ Dacă leadul este valid, răspunde EXCLUSIV în format JSON valid cu următoarele câmpuri:
 {
   "clientNameText": "...",
   "clientEmailText": "...",
@@ -62,16 +56,13 @@ ${coduriCaenContent}
   "clientTelefonText": "...",
   "mesajCatreClientText": "..."
 }
-
-Dacă leadul NU este valid, răspunde cu:
-{ "error": "Motivul concret pentru care nu e valid." }
 `;
 
   const completion = await openai.chat.completions.create({
     model: 'gpt-4o',
     messages: [
       { role: 'system', content: prompt },
-      { role: 'user', content: 'Evaluează leadul propus și redactează mesajul dacă este valid.' }
+      { role: 'user', content: 'Evaluează leadul propus și răspunde în format JSON.' }
     ],
     temperature: 0.6
   });
