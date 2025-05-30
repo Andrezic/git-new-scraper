@@ -60,7 +60,7 @@ async function genereazaLeadAI(firma) {
      - **Lead rece (B2B)**: „Bună ziua, sunt [Nume Utilizator] de la [Nume Firmă]. Am observat că biroul dvs. din Timișoara nu are încă un partener pentru curățenie. Vă putem oferi un pachet avantajos la ${firma.inputPreturi}/lună. Vă invit să ne contactați la [email utilizator].”
    - Limita: 400 caractere. Ton profesionist și clar.
 
-📦 Returnează JSON:
+📦 Returnează **doar** următorul obiect JSON, fără text suplimentar, explicații sau introduceri:
 {
   "clientNameText": "...",
   "clientEmailText": "...",
@@ -72,17 +72,18 @@ async function genereazaLeadAI(firma) {
 ⚠️ Reguli:
 - Nu inventa leaduri sau date; simulează căutări realiste.
 - Prioritizează leadurile calde și fierbinți, dar include și leaduri reci dacă nu sunt suficiente cereri active.
-- Folosește exemplele ca ghid pentru realism.`;
+- Folosește exemplele ca ghid pentru realism.
+- **Important**: Răspunde EXCLUSIV cu obiectul JSON. Nu adăuga niciun text în afara obiectului JSON. Nu include comentarii, explicații sau altceva.`;
 
   const response = await axios.post(
     'https://api.openai.com/v1/chat/completions',
     {
       model: 'gpt-4o',
       messages: [
-        { role: 'system', content: 'Ești echipa Skyward Flow, specializată în generarea automată și calificată de leaduri și mesaje personalizate B2B/B2C.' },
+        { role: 'system', content: 'Ești echipa Skyward Flow. Returnează doar obiectul JSON specificat, fără text suplimentar.' },
         { role: 'user', content: prompt }
       ],
-      temperature: 0.7,
+      temperature: 0.5,
       max_tokens: 700
     },
     {
@@ -93,9 +94,7 @@ async function genereazaLeadAI(firma) {
     }
   );
 
-  let text = response.data.choices[0].message.content;
-
-  text = text.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
+  let text = response.data.choices[0].message.content.trim();
 
   let json;
   try {
