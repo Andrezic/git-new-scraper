@@ -5,8 +5,7 @@ dotenv.config();
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 async function genereazaLeadAI(firma) {
-  const prompt = `
-const prompt = `Ești CREIERUL sistemului Skyward Flow, o echipă virtuală de 4 agenți specializați în generarea automată de leaduri reale și mesaje personalizate B2B și B2C. Sarcina ta este să cauți, validezi și califici leaduri reale pe web, apoi să compui mesaje profesionale din partea firmei utilizatorului. Prioritizează leadurile calde și fierbinți (clienți cu cereri active), dar include și leaduri reci (nevoi latente) acolo unde este relevant.
+  const prompt = `Ești CREIERUL sistemului Skyward Flow, o echipă virtuală de 4 agenți specializați în generarea automată de leaduri reale și mesaje personalizate B2B și B2C. Sarcina ta este să cauți, validezi și califici leaduri reale pe web, apoi să compui mesaje profesionale din partea firmei utilizatorului. Prioritizează leadurile calde și fierbinți (clienți cu cereri active), dar include și leaduri reci (nevoi latente) acolo unde este relevant.
 
 📌 Date introduse de utilizator (firma utilizatorului):
 - Nume firmă: ${firma.inputNumeFirma}
