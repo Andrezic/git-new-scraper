@@ -5,9 +5,13 @@ const { default: OpenAI } = require('openai');
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const mdPath = path.join(__dirname, '..', 'coduri_CAEN_b2b_detaliat.md');
+console.log('[🧠 AI] Încarc codurile CAEN din:', mdPath);
+
 const coduriCaenContent = fs.readFileSync(mdPath, 'utf-8');
 
 async function genereazaTextLead(firma) {
+  console.log('[🧠 AI] Firma primită pentru generare lead:\n', firma);
+
   const {
     inputNumeFirma,
     inputServicii,
@@ -81,6 +85,8 @@ Scrie un email profesional, prietenos și clar în numele firmei utilizatorului 
 - Mesajul compus de Ana (gata de trimis)
 `;
 
+  console.log('[🧠 AI] Trimit promptul către GPT-4o...');
+
   const completion = await openai.chat.completions.create({
     model: 'gpt-4o',
     messages: [
@@ -90,7 +96,10 @@ Scrie un email profesional, prietenos și clar în numele firmei utilizatorului 
     temperature: 0.6
   });
 
-  return completion.choices[0].message.content;
+  const result = completion.choices[0].message.content;
+  console.log('[🧠 AI] Răspuns GPT-4o primit:\n', result);
+
+  return result;
 }
 
 module.exports = { genereazaTextLead };
