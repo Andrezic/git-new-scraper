@@ -1,10 +1,22 @@
 const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
 const dotenv = require('dotenv');
 dotenv.config();
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 async function genereazaLeadAI(firma) {
+  // 1. Citim fișierul coduri_CAEN_b2b_detaliat.md
+  const caenPath = path.join(__dirname, '..', 'coduri_CAEN_b2b_detaliat.md');
+  let caenCompatibilitati = '';
+  try {
+    caenCompatibilitati = fs.readFileSync(caenPath, 'utf-8');
+  } catch (e) {
+    console.warn("⚠️ Nu s-a putut citi fișierul CAEN:", e.message);
+  }
+
+  // 2. Promptul tău original complet
   const prompt = `Ești CREIERUL sistemului Skyward Flow, o echipă virtuală de 4 super agenți specializați în generarea automată de lead-uri și mesaje personalizate B2B și B2C. Sarcina ta este structurată clar, iar răspunsurile tale trebuie să fie complete și precise.
 
 📌 Date introduse de utilizator (firma utilizatorului):
@@ -16,6 +28,9 @@ async function genereazaLeadAI(firma) {
 - Tip clienți doriți: ${firma.inputTipClienti}
 - Localizare țintită: ${firma.inputTintireGeo?.formatted || 'Nespecificat'}
 - Cuvinte cheie relevante: ${firma.inputKeywords}
+
+📖 Compatibilități CAEN relevante:
+${caenCompatibilitati}
 
 🚨 Instrucțiuni detaliate:
 
@@ -38,6 +53,8 @@ async function genereazaLeadAI(firma) {
 - B2B: Formală, centrată pe beneficii și rezultate pentru afacere.
 - B2C: Prietenoasă și axată pe beneficii personale.
 
+⚠️ Dacă NU există suficiente date pentru un lead real, spune clar care este lipsa (ex: „nu am găsit firmă compatibilă pe baza codului CAEN și a zonei geo”) — dar NU inventa leaduri.
+
 📦 Returnează exclusiv acest JSON (fără alte texte sau Markdown):
 {
   "clientNameText": "...",
@@ -47,6 +64,7 @@ async function genereazaLeadAI(firma) {
   "mesajCatreClientText": "..."
 }`;
 
+  // 3. Cerere către OpenAI
   const response = await axios.post(
     'https://api.openai.com/v1/chat/completions',
     {
@@ -56,7 +74,7 @@ async function genereazaLeadAI(firma) {
         { role: 'user', content: prompt }
       ],
       temperature: 0.3,
-      max_tokens: 700
+      max_tokens: 800
     },
     {
       headers: {
@@ -68,10 +86,9 @@ async function genereazaLeadAI(firma) {
 
   let text = response.data.choices[0].message.content.trim();
 
-  // Elimină blocurile Markdown dacă există
+  // Elimină eventualele blocuri Markdown
   text = text.replace(/^```json|```$/gi, '').trim();
 
-  // Asigură-te că ai extras corect JSON-ul
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (jsonMatch) {
     text = jsonMatch[0];
