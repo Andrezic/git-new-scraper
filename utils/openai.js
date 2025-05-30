@@ -53,6 +53,18 @@ ${coduriCaenContent}
 - clientWebsiteText
 - clientTelefonText
 - mesajCatreClientText
+
+⚠️ Dacă leadul este valid, răspunde EXCLUSIV în format JSON:
+{
+  "clientNameText": "...",
+  "clientEmailText": "...",
+  "clientWebsiteText": "...",
+  "clientTelefonText": "...",
+  "mesajCatreClientText": "..."
+}
+
+Dacă leadul NU este valid, răspunde cu:
+{ "error": "Motivul concret pentru care nu e valid." }
 `;
 
   const completion = await openai.chat.completions.create({
