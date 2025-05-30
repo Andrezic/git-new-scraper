@@ -1,109 +1,96 @@
-const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
-const dotenv = require('dotenv');
-dotenv.config();
+const { default: OpenAI } = require('openai');
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-async function genereazaLeadAI(firma) {
-  // 1. Citim fișierul coduri_CAEN_b2b_detaliat.md
-  const caenPath = path.join(__dirname, '..', 'coduri_CAEN_b2b_detaliat.md');
-  let caenCompatibilitati = '';
-  try {
-    caenCompatibilitati = fs.readFileSync(caenPath, 'utf-8');
-  } catch (e) {
-    console.warn("⚠️ Nu s-a putut citi fișierul CAEN:", e.message);
-  }
+const mdPath = path.join(__dirname, '..', 'coduri_CAEN_b2b_detaliat.md');
+const coduriCaenContent = fs.readFileSync(mdPath, 'utf-8');
 
-  // 2. Promptul tău original complet
-  const prompt = `Ești CREIERUL sistemului Skyward Flow, o echipă virtuală de 4 super agenți specializați în generarea automată de lead-uri și mesaje personalizate B2B și B2C. Sarcina ta este structurată clar, iar răspunsurile tale trebuie să fie complete și precise.
+async function genereazaTextLead(firma) {
+  const {
+    inputNumeFirma,
+    inputServicii,
+    inputPreturi,
+    inputAvantaje,
+    inputCodCaen,
+    inputTipClienti,
+    inputLocalizare,
+    inputWebsiteFirma,
+    inputCui,
+    inputDimensiuneClient,
+    inputTipColaborare,
+    inputKeywords,
+    inputCerinteExtra,
+    inputDescriere
+  } = firma;
 
-📌 Date introduse de utilizator (firma utilizatorului):
-- Nume firmă: ${firma.inputNumeFirma}
-- Servicii: ${firma.inputServicii}
-- Prețuri: ${firma.inputPreturi}
-- Avantaje competitive: ${firma.inputAvantaje}
-- Cod CAEN: ${firma.inputCodCaen}
-- Tip clienți doriți: ${firma.inputTipClienti}
-- Localizare țintită: ${firma.inputTintireGeo?.formatted || 'Nespecificat'}
-- Cuvinte cheie relevante: ${firma.inputKeywords}
+  const finalSystemPrompt = `
+Tu ești un sistem AI avansat format din 4 agenți colaborativi. Scopul tău este să generezi un lead real și calificat pentru firma de mai jos, iar dacă nu există niciun lead valid, explici clar de ce, fără a inventa date. Fără excepție.
 
-📖 Compatibilități CAEN relevante:
-${caenCompatibilitati}
+🔍 **Datele firmei care caută clienți B2B**:
+- Nume firmă: ${inputNumeFirma}
+- Servicii: ${inputServicii}
+- Prețuri: ${inputPreturi}
+- Avantaje competitive: ${inputAvantaje}
+- Cod CAEN: ${inputCodCaen}
+- Tip clienți targetați: ${inputTipClienti}
+- Localizare: ${JSON.stringify(inputLocalizare)}
+- Website: ${inputWebsiteFirma}
+- CUI: ${inputCui}
+- Dimensiunea clientului ideal: ${inputDimensiuneClient}
+- Tip colaborare dorit: ${inputTipColaborare}
+- Cuvinte cheie importante: ${inputKeywords}
+- Cerințe extra: ${inputCerinteExtra}
+- Descriere firmă: ${inputDescriere}
 
-🚨 Instrucțiuni detaliate:
+📄 **Lista completă de compatibilități CAEN (pentru Mara):**
+${coduriCaenContent}
 
-1. 🕵️ Mara (Researcher): Identifică și colectează date reale despre un potențial client folosind surse online relevante (site-uri oficiale, LinkedIn, directoare profesionale).
-   - Exemple clare: „salon înfrumusețare București fără site web”, „cabinet stomatologic Iași fără social media”.
-   - Dacă lipsește o informație (telefon, email), solicită agentului Alex să verifice suplimentar.
+🎯 Obiectivul tău este să găsești o firmă reală, compatibilă, validată, și să compui un mesaj de contact în numele firmei de mai sus.
 
-2. ✅ Alex (Validator): Verifică și validează datele găsite (email, telefon, website).
-   - Confirmă telefonul real din surse sigure (Pagini Aurii, website oficial).
-   - Dacă Mara solicită reverificarea, o faci rapid și precis.
+---
 
-3. 📈 Radu (Analyst): Analizează datele validate și identifică insight-uri clare și oportunități reale pentru abordare.
-   - Exemple clare: „Salonul nu are site web, pierzând clienți potențiali”, „Cabinetul stomatologic poate atrage clienți tineri prin social media”.
+👩‍💻 *Mara – Agent de căutare*  
+Găsește o firmă B2B reală, cu website activ, contact valid și activitate compatibilă cu profilul firmei utilizatorului. Folosește codul CAEN, industria, localizarea și criteriile oferite. Respinge orice rezultat cu site inexistent, în construcție sau lipsă date de contact.
 
-4. ✉️ Ana (Outreach Expert): Compune un email din partea firmei utilizatorului, adaptat limbii și contextului clientului.
-   - Mesajul este din partea firmei utilizatorului, propunând clar serviciile acesteia către client.
-   - Exemplu clar: „Bună ziua, sunt [Nume utilizator] de la [Firma utilizator]. Am observat că salonul dvs. nu are site web și pierde clienți potențiali. Putem ajuta cu un site modern la preț competitiv. Vă invit să discutăm: [telefon utilizator].”
+🧑‍💼 *Alex – Validator tehnic*  
+Verifică dacă firma găsită de Mara are website activ, email/telefon valid, pagină funcțională. Dacă firma nu trece validarea, întoarce controlul la Mara pentru o altă alegere.
 
-🔍 Tip abordare:
-- B2B: Formală, centrată pe beneficii și rezultate pentru afacere.
-- B2C: Prietenoasă și axată pe beneficii personale.
+📊 *Radu – Analist strategic*  
+Evaluează dacă această firmă este un match B2B potrivit. Dacă nu este, explică exact de ce și ce ar trebui ajustat. Dacă este potrivită, aprobă pentru trimiterea mesajului.
 
-⚠️ Dacă NU există suficiente date pentru un lead real, spune clar care este lipsa (ex: „nu am găsit firmă compatibilă pe baza codului CAEN și a zonei geo”) — dar NU inventa leaduri.
+✍️ *Ana – Copywriter AI*  
+Scrie un email profesional, prietenos și clar în numele firmei utilizatorului (${inputNumeFirma}), nu în numele Skyward Flow. Include:
+- Salut personalizat
+- Prezentarea firmei și avantajele
+- Ce oferim concret
+- De ce acest client este potrivit
+- Call to action clar
+- Semnătură personalizată cu ${inputNumeFirma}
 
-📦 Returnează exclusiv acest JSON (fără alte texte sau Markdown):
-{
-  "clientNameText": "...",
-  "clientEmailText": "...",
-  "clientWebsiteText": "...",
-  "clientTelefonText": "...",
-  "mesajCatreClientText": "..."
-}`;
+⚠️ Dacă NU există niciun lead real valid, răspunde doar cu motivul (ex: lipsă date, lipsă firme compatibile) și NU inventa un lead.
 
-  // 3. Cerere către OpenAI
-  const response = await axios.post(
-    'https://api.openai.com/v1/chat/completions',
-    {
-      model: 'gpt-4o',
-      messages: [
-        { role: 'system', content: 'Ești echipa Skyward Flow. Returnează doar obiectul JSON specificat, fără Markdown sau text suplimentar.' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.3,
-      max_tokens: 800
-    },
-    {
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json'
-      }
-    }
-  );
+---
 
-  let text = response.data.choices[0].message.content.trim();
+✅ Outputul final trebuie să conțină:
+- Nume client
+- Email client
+- Website client
+- Telefon (dacă există)
+- Mesajul compus de Ana (gata de trimis)
+`;
 
-  // Elimină eventualele blocuri Markdown
-  text = text.replace(/^```json|```$/gi, '').trim();
+  const completion = await openai.chat.completions.create({
+    model: 'gpt-4o',
+    messages: [
+      { role: 'system', content: finalSystemPrompt },
+      { role: 'user', content: 'Găsește un lead real valid și redactează mesajul final conform instrucțiunilor de mai sus.' }
+    ],
+    temperature: 0.6
+  });
 
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (jsonMatch) {
-    text = jsonMatch[0];
-  }
-
-  let json;
-  try {
-    json = JSON.parse(text);
-  } catch (e) {
-    console.error("❌ Eroare parsare JSON:", e.message);
-    console.error("📄 Răspuns brut AI:", text);
-    throw new Error("Răspunsul AI nu este un JSON valid.");
-  }
-
-  return json;
+  return completion.choices[0].message.content;
 }
 
-module.exports = { genereazaLeadAI };
+module.exports = { genereazaTextLead };
