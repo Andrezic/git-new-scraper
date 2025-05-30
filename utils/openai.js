@@ -21,10 +21,6 @@ async function genereazaLeadAI(firma) {
 
 1. 🕵️ **Mara – Web Search Master**
    - Caută online leaduri reale, prioritizând surse unde clienții își exprimă cereri explicite (ex. SEAP, forumuri de afaceri, marketplace-uri B2B, anunțuri online).
-   - Exemple de căutări pentru servicii de curățenie:
-     - „cerere curățenie birou București” (pe SEAP sau forumuri)
-     - „caut firmă curățenie pentru restaurant Cluj” (pe LinkedIn sau grupuri de Facebook)
-     - „licitație servicii curățenie Timișoara” (pe platforme de achiziții publice)
    - Extrage: nume firmă, email, website (dacă există), telefon. Notează sursa pentru validare.
    - Generează minim 5 leaduri (inclusiv leaduri calde/fierbinți, dacă sunt disponibile) și transmite-le lui Alex.
 
@@ -33,9 +29,6 @@ async function genereazaLeadAI(firma) {
      - Verifică actualitatea cererilor (ex. licitația este încă deschisă, postarea de pe forum este recentă).
      - Confirmă existența firmei prin surse oficiale (ex. ONRC, Pagini Aurii).
      - Verifică emailurile și telefoanele pentru format și validitate.
-   - Exemple:
-     - „Cerere pe SEAP pentru curățenie birou în București, publicată acum 2 zile, încă activă.”
-     - „Firma Restaurant Cluj SRL este activă pe ONRC, email valid: contact@restaurantcluj.ro.”
    - Transmite leadurile validate lui Radu.
 
 3. 📈 **Radu – Business Analyzer**
@@ -47,17 +40,11 @@ async function genereazaLeadAI(firma) {
      - Locație: 20% (în zona țintită?)
      - Potențial: 20% (cerere clară sau nevoie evidentă?)
      - Dimensiune: 20% (capacitate de plată?)
-   - Alege cel mai bun lead și oferă un insight:
-     - „Firma X a postat o cerere urgentă pe SEAP pentru curățenie birou în București. Potențial mare pentru servicii de curățenie.”
-     - „Restaurantul Y din Cluj caută activ pe LinkedIn o firmă de curățenie. Oportunitate bună pentru o ofertă rapidă.”
+   - Alege cel mai bun lead și oferă un insight.
    - Transmite lead-ul selectat lui Ana.
 
 4. ✉️ **Ana – Email Outreach Expert**
    - Compune un email din partea firmei utilizatorului, adaptat tipului de lead (cald/fierbinte/rece).
-   - Exemple:
-     - **Lead fierbinte (B2B)**: „Bună ziua, sunt [Nume Utilizator] de la [Nume Firmă]. Am observat cererea dvs. pe SEAP pentru servicii de curățenie în București. Oferim curățenie profesională la ${firma.inputPreturi}/mp, cu disponibilitate imediată. Vă rog să mă contactați la [telefon utilizator] pentru detalii.”
-     - **Lead cald (B2C)**: „Bună, sunt [Nume Utilizator] de la [Nume Firmă]. Am văzut pe LinkedIn că sunteți în căutare de servicii de curățenie pentru restaurantul dvs. din Cluj. Oferim soluții personalizate la prețuri competitive. Hai să discutăm!”
-     - **Lead rece (B2B)**: „Bună ziua, sunt [Nume Utilizator] de la [Nume Firmă]. Am observat că biroul dvs. din Timișoara nu are încă un partener pentru curățenie. Vă putem oferi un pachet avantajos la ${firma.inputPreturi}/lună. Vă invit să ne contactați la [email utilizator].”
    - Limita: 400 caractere. Ton profesionist și clar.
 
 📦 Returnează **doar** următorul obiect JSON, fără text suplimentar, explicații sau introduceri:
@@ -80,10 +67,10 @@ async function genereazaLeadAI(firma) {
     {
       model: 'gpt-4o',
       messages: [
-        { role: 'system', content: 'Ești echipa Skyward Flow. Returnează doar obiectul JSON specificat, fără text suplimentar.' },
+        { role: 'system', content: 'Ești echipa Skyward Flow. Returnează doar obiectul JSON specificat, fără text suplimentar. Răspunsul tău trebuie să fie exclusiv obiectul JSON, fără explicații sau comentarii.' },
         { role: 'user', content: prompt }
       ],
-      temperature: 0.5,
+      temperature: 0.3, // Redus pentru precizie
       max_tokens: 700
     },
     {
@@ -95,6 +82,12 @@ async function genereazaLeadAI(firma) {
   );
 
   let text = response.data.choices[0].message.content.trim();
+
+  // Extrage obiectul JSON dacă există text suplimentar
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    text = jsonMatch[0];
+  }
 
   let json;
   try {
