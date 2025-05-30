@@ -5,7 +5,7 @@ dotenv.config();
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 async function genereazaLeadAI(firma) {
-  const prompt = `Ești CREIERUL sistemului Skyward Flow, o echipă virtuală de 4 agenți specializați în generarea automată de leaduri reale și mesaje personalizate B2B și B2C. Sarcina ta este să cauți, validezi și califici leaduri reale pe web, apoi să compui mesaje profesionale din partea firmei utilizatorului. Prioritizează leadurile calde și fierbinți (clienți cu cereri active), dar include și leaduri reci (nevoi latente) acolo unde este relevant.
+  const prompt = `Ești CREIERUL sistemului Skyward Flow, o echipă virtuală de 4 super agenți specializați în generarea automată de lead-uri și mesaje personalizate B2B și B2C. Sarcina ta este structurată clar, iar răspunsurile tale trebuie să fie complete și precise.
 
 📌 Date introduse de utilizator (firma utilizatorului):
 - Nume firmă: ${firma.inputNumeFirma}
@@ -17,60 +17,45 @@ async function genereazaLeadAI(firma) {
 - Localizare țintită: ${firma.inputTintireGeo?.formatted || 'Nespecificat'}
 - Cuvinte cheie relevante: ${firma.inputKeywords}
 
-🚀 Flux de Lucru și Roluri:
+🚨 Instrucțiuni detaliate:
 
-1. 🕵️ **Mara – Web Search Master**
-   - Caută online leaduri reale, prioritizând surse unde clienții își exprimă cereri explicite (ex. SEAP, forumuri de afaceri, marketplace-uri B2B, anunțuri online).
-   - Extrage: nume firmă, email, website (dacă există), telefon. Notează sursa pentru validare.
-   - Generează minim 5 leaduri (inclusiv leaduri calde/fierbinți, dacă sunt disponibile) și transmite-le lui Alex.
+1. 🕵️ Mara (Researcher): Identifică și colectează date reale despre un potențial client folosind surse online relevante (site-uri oficiale, LinkedIn, directoare profesionale).
+   - Exemple clare: „salon înfrumusețare București fără site web”, „cabinet stomatologic Iași fără social media”.
+   - Dacă lipsește o informație (telefon, email), solicită agentului Alex să verifice suplimentar.
 
-2. ✅ **Alex – Data Validator**
-   - Validează datele primite de la Mara:
-     - Verifică actualitatea cererilor (ex. licitația este încă deschisă, postarea de pe forum este recentă).
-     - Confirmă existența firmei prin surse oficiale (ex. ONRC, Pagini Aurii).
-     - Verifică emailurile și telefoanele pentru format și validitate.
-   - Transmite leadurile validate lui Radu.
+2. ✅ Alex (Validator): Verifică și validează datele găsite (email, telefon, website).
+   - Confirmă telefonul real din surse sigure (Pagini Aurii, website oficial).
+   - Dacă Mara solicită reverificarea, o faci rapid și precis.
 
-3. 📈 **Radu – Business Analyzer**
-   - Evaluează leadurile validate cu un sistem de scor:
-     - Lead fierbinte (cerere urgentă): 90-100%
-     - Lead cald (interes activ): 70-89%
-     - Lead rece (nevoie latentă): 50-69%
-     - Relevanță: 40% (potrivește serviciile utilizatorului?)
-     - Locație: 20% (în zona țintită?)
-     - Potențial: 20% (cerere clară sau nevoie evidentă?)
-     - Dimensiune: 20% (capacitate de plată?)
-   - Alege cel mai bun lead și oferă un insight.
-   - Transmite lead-ul selectat lui Ana.
+3. 📈 Radu (Analyst): Analizează datele validate și identifică insight-uri clare și oportunități reale pentru abordare.
+   - Exemple clare: „Salonul nu are site web, pierzând clienți potențiali”, „Cabinetul stomatologic poate atrage clienți tineri prin social media”.
 
-4. ✉️ **Ana – Email Outreach Expert**
-   - Compune un email din partea firmei utilizatorului, adaptat tipului de lead (cald/fierbinte/rece).
-   - Limita: 400 caractere. Ton profesionist și clar.
+4. ✉️ Ana (Outreach Expert): Compune un email din partea firmei utilizatorului, adaptat limbii și contextului clientului.
+   - Mesajul este din partea firmei utilizatorului, propunând clar serviciile acesteia către client.
+   - Exemplu clar: „Bună ziua, sunt [Nume utilizator] de la [Firma utilizator]. Am observat că salonul dvs. nu are site web și pierde clienți potențiali. Putem ajuta cu un site modern la preț competitiv. Vă invit să discutăm: [telefon utilizator].”
 
-📦 Returnează **doar** următorul obiect JSON, fără text suplimentar, explicații sau introduceri:
+🔍 Tip abordare:
+- B2B: Formală, centrată pe beneficii și rezultate pentru afacere.
+- B2C: Prietenoasă și axată pe beneficii personale.
+
+📦 Returnează exclusiv acest JSON (fără alte texte sau Markdown):
 {
   "clientNameText": "...",
   "clientEmailText": "...",
   "clientWebsiteText": "...",
   "clientTelefonText": "...",
   "mesajCatreClientText": "..."
-}
-
-⚠️ Reguli:
-- Nu inventa leaduri sau date; simulează căutări realiste.
-- Prioritizează leadurile calde și fierbinți, dar include și leaduri reci dacă nu sunt suficiente cereri active.
-- Folosește exemplele ca ghid pentru realism.
-- **Important**: Răspunde EXCLUSIV cu obiectul JSON. Nu adăuga niciun text în afara obiectului JSON. Nu include comentarii, explicații sau altceva.`;
+}`;
 
   const response = await axios.post(
     'https://api.openai.com/v1/chat/completions',
     {
       model: 'gpt-4o',
       messages: [
-        { role: 'system', content: 'Ești echipa Skyward Flow. Returnează doar obiectul JSON specificat, fără text suplimentar. Răspunsul tău trebuie să fie exclusiv obiectul JSON, fără explicații sau comentarii.' },
+        { role: 'system', content: 'Ești echipa Skyward Flow. Returnează doar obiectul JSON specificat, fără Markdown sau text suplimentar.' },
         { role: 'user', content: prompt }
       ],
-      temperature: 0.3, // Redus pentru precizie
+      temperature: 0.3,
       max_tokens: 700
     },
     {
@@ -83,7 +68,10 @@ async function genereazaLeadAI(firma) {
 
   let text = response.data.choices[0].message.content.trim();
 
-  // Extrage obiectul JSON dacă există text suplimentar
+  // Elimină blocurile Markdown dacă există
+  text = text.replace(/^```json|```$/gi, '').trim();
+
+  // Asigură-te că ai extras corect JSON-ul
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (jsonMatch) {
     text = jsonMatch[0];
