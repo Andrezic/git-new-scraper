@@ -1,14 +1,13 @@
-// scraper.js
+
 require('dotenv').config();
 const puppeteer = require('puppeteer-core');
-const axios     = require('axios');
+const chromium = require('chromium');
+const axios = require('axios');
 
 async function launchBrowser() {
-  const executablePath = process.env.CHROME_PATH;
-  if (!executablePath) throw new Error('Setează CHROME_PATH în .env');
-
-  const proxy = process.env.DATAIMPULSE_PROXY; // “host:port”
-  if (!proxy) throw new Error('Setează DATAIMPULSE_PROXY în .env');
+  const executablePath = chromium.path;
+  const proxy = process.env.DATAIMPULSE_PROXY;
+  if (!proxy) throw new Error('DATAIMPULSE_PROXY lipsă în .env');
 
   return puppeteer.launch({
     executablePath,
@@ -21,34 +20,11 @@ async function launchBrowser() {
   });
 }
 
-function mapRawToCompanyData(raw) {
-  return {
-    inputCodCaen:          raw['cod-caen principal']             || '',
-    inputCui:              raw['cui/nr.-registru']               || '',
-    inputNumarAngajati:    raw['numar-angajati']                 || '',
-    inputNumeFirma:        raw['nume-firmă']                     || '',
-    inputServicii:         raw['produse/servicii-oferite']       || '',
-    inputPreturi:          raw['prețuri']                        || '',
-    inputAvantaje:         raw['avantaje-competitive']           || '',
-    inputTelefonFirma:     raw['telefon-firmă']                  || '',
-    inputEmailFirma:       raw['email']                          || '',
-    inputWebsiteFirma:     raw['website-firmă']                  || '',
-    inputTipClienti:       raw['tipul-de clienti dorit']         || '',
-    inputDimensiuneClient: raw['dimensiune-client']              || '',
-    inputKeywords:         raw['cuvinte-cheie']                  || '',
-    inputCerinteExtra:     raw['cerinte-extra']                  || '',
-    inputLocalizare:       raw['input_comp-makx1n4r6']           || '',
-    inputDescriere:        raw['descriere-suplimentară (opțional)'] || '',
-    inputTintireGeo:       raw['input_comp-makx1n586']           || '',
-    firmaId:               raw.firmaId
-  };
-}
-
 (async () => {
-  const firmaId = process.env.FIRMA_ID;
+  const firmaId = process.argv[2];
   const apiUrl  = process.env.API_BASE_URL;
   if (!firmaId || !apiUrl) {
-    console.error('Trebuie să setezi FIRMA_ID și API_BASE_URL în .env');
+    console.error('❌ Lipsă firmaId sau API_BASE_URL');
     process.exit(1);
   }
 
@@ -57,53 +33,63 @@ function mapRawToCompanyData(raw) {
     browser = await launchBrowser();
     const page = await browser.newPage();
 
-    // Autentificare proxy HTTP Basic
     await page.authenticate({
       username: process.env.DATAIMPULSE_USER,
       password: process.env.DATAIMPULSE_PASSWORD
     });
 
-    const url = `https://www.skywardflow.com/formular-scraper?firmaId=${firmaId}`;
-    console.log('🚀 Navighez la', url);
+    const { data } = await axios.get(`${apiUrl}/firmabyid/${firmaId}`);
+    const firma = data.firma;
+    if (!firma) throw new Error('Firma nu a fost găsită în CMS Wix.');
+
+    const keyword = encodeURIComponent(firma.inputServicii || firma.inputCodCaen || 'servicii');
+    const url = `https://www.firme-on-line.ro/cauta/${keyword}`;
+    console.log(`🔎 Caut pe ${url}`);
+
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
+    await page.waitForSelector('.detalii_firma');
 
-    // Așteptăm formularul
-    await page.waitForTimeout(3000);
-    let frame = page.frames().find(f => f.url().includes('formular-scraper')) || page;
+    const lead = await page.evaluate(() => {
+      const container = document.querySelector('.detalii_firma');
+      if (!container) return null;
 
-    await frame.waitForSelector('input, textarea', { timeout: 60000 });
+      const getText = (selector) => {
+        const el = container.querySelector(selector);
+        return el ? el.innerText.trim() : '';
+      };
+      const getHref = (selector) => {
+        const el = container.querySelector(selector);
+        return el ? el.href.trim() : '';
+      };
 
-    const rawData = await frame.evaluate(fId => {
-      const out = {};
-      document.querySelectorAll('input, textarea').forEach(el => {
-        const key = el.name || el.id;
-        if (key) out[key] = el.value.trim();
-      });
-      out.firmaId = fId;
-      return out;
-    }, firmaId);
+      return {
+        clientNameText: getText('h2 a'),
+        clientEmailText: getText('.email a'),
+        clientTelefonText: getText('.telefon'),
+        clientWebsiteText: getHref('.website a')
+      };
+    });
 
-    console.log('🔍 Raw fields:', rawData);
-    const companyData = mapRawToCompanyData(rawData);
+    if (!lead || !lead.clientEmailText || !lead.clientNameText) {
+      console.warn('⚠️ Nu s-a găsit niciun lead valid.');
+      return;
+    }
 
-    // Adăugăm date de test (sau înlocuieşte cu lead real)
-    const lead = {
-      ...companyData,
-      clientNameText:    process.env.TEST_CLIENT_NAME  || 'Client Test Automat',
-      clientEmailText:   process.env.TEST_CLIENT_EMAIL || 'client@testmail.com',
-      clientTelefonText: process.env.TEST_CLIENT_PHONE || '0712345678'
+    console.log('✅ Lead real găsit:', lead);
+
+    const payload = {
+      firmaUtilizator: firma,
+      leadPropus: lead
     };
 
-    console.log('✅ Lead pregătit:', lead);
-    const resp = await axios.post(
-      `${apiUrl}/genereaza`,
-      lead,
-      { headers: { 'Content-Type': 'application/json' } }
-    );
-    console.log('📤 Răspuns backend:', resp.data);
+    const response = await axios.post(`${apiUrl}/genereaza`, payload, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    console.log('📤 Răspuns backend:', response.data);
 
   } catch (err) {
-    console.error('❌ Eroare în scraper:', err.message || err);
+    console.error('❌ Eroare scraper:', err.message || err);
   } finally {
     if (browser) await browser.close();
   }
