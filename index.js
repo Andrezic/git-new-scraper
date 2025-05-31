@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 require('dotenv').config();
 
-const { genereazaLeadAI } = require('./utils/openai');
+const { genereazaLeadAI } = require('./utils/openai'); // <-- corect
 const { getFirmaById } = require('./utils/wix-data');
 const { salveazaLeadNou } = require('./utils/wix-leads');
 
@@ -12,24 +12,6 @@ const port = 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
-
-app.get('/', (req, res) => {
-  res.send('✅ Serverul funcționează!');
-});
-
-app.get('/firme-fara-lead', async (req, res) => {
-  console.log('🔄 Pornit GET /firme-fara-lead');
-  try {
-    const firma = await getFirmaById(null, true);
-    if (!firma || !firma._id) {
-      return res.status(404).json({ error: 'Nicio firmă fără leaduri' });
-    }
-    res.json(firma);
-  } catch (error) {
-    console.error('❌ Eroare la getFirmeFaraLead:', error.message);
-    res.status(500).json({ error: 'Eroare server' });
-  }
-});
 
 app.post('/genereaza', async (req, res) => {
   const { firmaId } = req.body;
@@ -41,7 +23,7 @@ app.post('/genereaza', async (req, res) => {
       return res.status(400).json({ error: 'Lipsesc datele firmei' });
     }
 
-    console.log('📦 Firma primită:', firma);
+    console.log('📥 Firma primită:', firma);
 
     const leadPropus = {
       clientNameText: 'Nume Client Test',
@@ -50,8 +32,7 @@ app.post('/genereaza', async (req, res) => {
       clientWebsiteText: 'https://www.exemplu.com'
     };
 
-    const rezultatAI = await genereazaLeadAI({ firmaUtilizator: firma, leadPropus });
-
+    const rezultatAI = await genereazaLeadAI({ firmaUtilizator: firma, leadPropus }); // <-- corect
     const leadFinal = {
       ...leadPropus,
       mesajCatreClientText: rezultatAI.mesajFinal,
@@ -67,8 +48,4 @@ app.post('/genereaza', async (req, res) => {
     console.error('❌ Eroare în /genereaza:', error.message);
     res.status(500).json({ error: 'Eroare server la generare lead' });
   }
-});
-
-app.listen(port, () => {
-  console.log(`🚀 Server pornit pe portul ${port}`);
 });
