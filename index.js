@@ -21,30 +21,24 @@ app.get('/firme-fara-lead', async (req, res) => {
 // ✅ POST endpoint pentru generare lead
 app.post('/genereaza', async (req, res) => {
   try {
-    const { firmaId } = req.body;
-    if (!firmaId) return res.status(400).json({ error: 'Lipseste firmaId' });
+    const firma = req.body.firma;
 
-    const firma = await getFirmaById(firmaId);
-    if (!firma) return res.status(404).json({ error: 'Firma nu a fost gasita' });
+    console.log("📥 Firma primită:", firma);
 
-    console.log('📥 Firma primită:', firma);
+    if (!firma || !firma.firmaId) {
+      return res.status(400).json({ error: "Lipseste firmaId" });
+    }
 
-    const leadAI = await genereazaLeadAI(firma);
+    const rezultat = await genereazaLead(firma);
 
-    const leadFinal = {
-      ...leadAI,
-      firmaId: firma._id,
-      status: 'trimis',
-      dataText: new Date().toISOString()
-    };
+    if (rezultat.error) {
+      return res.status(500).json({ error: rezultat.error });
+    }
 
-    await salveazaLeadNou(leadFinal);
-
-    console.log('✅ Lead generat și salvat:', leadFinal);
-    res.status(200).json({ success: true, lead: leadFinal });
-  } catch (err) {
-    console.error('❌ Eroare în /genereaza:', err);
-    res.status(500).json({ error: 'Eroare server la generare lead' });
+    return res.json({ success: true, lead: rezultat });
+  } catch (e) {
+    console.error("❌ Eroare în /genereaza:", e);
+    return res.status(500).json({ error: "Eroare server la generare lead" });
   }
 });
 
