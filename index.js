@@ -24,7 +24,8 @@ app.get('/', (req, res) => {
 app.post('/genereaza', async (req, res) => {
   try {
     console.log('📥 Body primit:', req.body);
-    const firma = req.body;
+    const firma = req.body.firma;
+    console.log("📥 Firma primită:", firma);
 
     if (!firma || !firma.inputNumeFirma || !firma.inputCodCaen) {
       return res.status(400).json({ error: 'Lipsesc datele firmei' });
