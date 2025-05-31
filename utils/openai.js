@@ -1,9 +1,9 @@
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config();
 const { OpenAI } = require('openai');
-
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 // Citim promptul de sistem + fișierul cu codurile CAEN
