@@ -1,10 +1,9 @@
-require('dotenv').config();
 const axios = require('axios');
 const { exec } = require('child_process');
 
 (async () => {
   try {
-    const apiUrl = `${process.env.API_BASE_URL}/firme-fara-lead`;
+    const apiUrl = `https://git-new-scraper.onrender.com/firme-fara-lead`;
     console.log("🔄 Cerere către:", apiUrl);
 
     const response = await axios.get(apiUrl);
