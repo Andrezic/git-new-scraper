@@ -23,12 +23,11 @@ app.get('/', (req, res) => {
 // POST /genereaza - generează lead pentru o firmă dată
 app.post('/genereaza', async (req, res) => {
   try {
-    console.log('📥 Body primit:', req.body);
-    const firma = req.body.firma;
+    const firma = req.body.firma || req.body; // acceptă ambele variante
     console.log("📥 Firma primită:", firma);
 
     if (!firma || !firma.inputNumeFirma || !firma.inputCodCaen) {
-      return res.status(400).json({ error: 'Lipsesc datele firmei' });
+      return res.status(400).json({ error: "Lipsesc datele firmei" });
     }
 
     const rezultat = await genereazaLead(firma);
@@ -37,20 +36,20 @@ app.post('/genereaza', async (req, res) => {
     const leadSalvat = await salveazaLead(firma, rezultat);
     res.json({ success: true, lead: leadSalvat });
   } catch (err) {
-    console.error('❌ Eroare în /genereaza:', err);
-    res.status(500).json({ error: 'Eroare server la generare lead' });
+    console.error("❌ Eroare în /genereaza:", err);
+    res.status(500).json({ error: "Eroare server la generare lead" });
   }
 });
 
 // GET /firme-fara-lead - returnează firmele care nu au primit încă lead
 app.get('/firme-fara-lead', async (req, res) => {
   try {
-    console.log('🔄 Pornit GET /firme-fara-lead');
+    console.log("🔄 Pornit GET /firme-fara-lead");
     const firme = await getFirmeFaraLead();
     res.json(firme);
   } catch (err) {
-    console.error('❌ Eroare la /firme-fara-lead:', err.message);
-    res.status(500).json({ error: 'Eroare server la obținere firme' });
+    console.error("❌ Eroare la /firme-fara-lead:", err.message);
+    res.status(500).json({ error: "Eroare server la obținere firme" });
   }
 });
 
