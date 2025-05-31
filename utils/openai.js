@@ -1,63 +1,55 @@
 const fs = require('fs');
 const path = require('path');
 const { OpenAI } = require('openai');
-require('dotenv').config();
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
 
-const mdPath = path.join(__dirname, '..', 'coduri_CAEN_b2b_detaliat.md');
-const coduriCaen = fs.existsSync(mdPath) ? fs.readFileSync(mdPath, 'utf8') : '';
+// Citim promptul de sistem + fișierul cu codurile CAEN
+const sistemPrompt = fs.readFileSync(path.join(__dirname, 'prompt-system.txt'), 'utf8');
+const coduriCaen = fs.readFileSync(path.join(__dirname, '../coduri_CAEN_b2b_detaliat.md'), 'utf8');
 
+// ✅ Funcție principală exportată corect
 async function genereazaLeadAI(firma) {
-  const prompt = `
-Tu ești Alex, cel mai bun agent AI de Business Match B2B. Scanează datele firmei de mai jos și oferă o oportunitate de colaborare B2B reală, verificată și potrivită. NU inventa leaduri dacă nu există o potrivire clară. Folosește CAEN-ul, serviciile și datele relevante. La final, generează un mesaj personalizat, în numele firmei, care va fi trimis clientului.
-
-Date firmă:
-Nume: ${firma.inputNumeFirma}
-CAEN: ${firma.inputCodCaen}
-CUI: ${firma.inputCui}
-Email: ${firma.inputEmailFirma}
-Telefon: ${firma.inputTelefonFirma}
-Website: ${firma.inputWebsiteFirma}
-Servicii: ${firma.inputServicii}
-Avantaje: ${firma.inputAvantaje}
-Prețuri: ${firma.inputPreturi}
-Tip clienți: ${firma.inputTipClienti}
-Dimensiune client dorit: ${firma.inputDimensiuneClient}
-Cuvinte cheie: ${firma.inputKeywords}
-Descriere: ${firma.inputDescriere}
-Țintire geografică: ${firma.inputTintireGeo?.formatted || ''}
-Localizare firmă: ${firma.inputLocalizare?.formatted || ''}
-
-Coduri CAEN compatibile: 
+  const mesajUtilizator = `
+📦 Firma: ${firma.inputNumeFirma}
+🌐 Website: ${firma.inputWebsiteFirma}
+📧 Email: ${firma.inputEmailFirma}
+📞 Telefon: ${firma.inputTelefonFirma}
+🛠️ Servicii: ${firma.inputServicii}
+💡 Avantaje: ${firma.inputAvantaje}
+💰 Preturi: ${firma.inputPreturi}
+🧩 Tip client dorit: ${firma.inputTipClienti}
+🏢 Dimensiune client: ${firma.inputDimensiuneClient}
+📍 Zona target: ${firma.inputTintireGeo?.formatted || ''}
+🗺️ Localizare firma: ${firma.inputLocalizare?.formatted || ''}
+🔍 Cuvinte cheie: ${firma.inputKeywords}
+📜 Descriere: ${firma.inputDescriere}
+📗 Cod CAEN: ${firma.inputCodCaen}
+🧠 Context coduri CAEN:
 ${coduriCaen}
-
-Răspunsul tău trebuie să conțină:
-1. Numele firmei/clientului găsit
-2. Email client
-3. Telefon client (dacă este)
-4. Website client
-5. Mesaj personalizat în numele utilizatorului către acest client
 `;
 
-  const completion = await openai.chat.completions.create({
+  const raspuns = await openai.chat.completions.create({
     model: 'gpt-4o',
-    messages: [{ role: 'user', content: prompt }],
-    temperature: 0.6
+    temperature: 0.4,
+    messages: [
+      { role: 'system', content: sistemPrompt },
+      { role: 'user', content: mesajUtilizator }
+    ]
   });
 
-  const output = completion.choices[0].message.content;
+  const rezultat = raspuns.choices?.[0]?.message?.content || '';
+  const [clientNameText, clientEmailText, clientTelefonText, clientWebsiteText, mesajCatreClientText] = rezultat.split('\n').map(line => line.trim());
 
-  // Simplu extractor pentru lead
-  const lead = {
-    clientNameText: '',
-    clientEmailText: '',
-    clientTelefonText: '',
-    clientWebsiteText: '',
-    mesajCatreClientText: output || ''
+  return {
+    clientNameText,
+    clientEmailText,
+    clientTelefonText,
+    clientWebsiteText,
+    mesajCatreClientText
   };
-
-  return lead;
 }
 
 module.exports = { genereazaLeadAI };
