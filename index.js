@@ -1,59 +1,27 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const dotenv = require('dotenv');
-const { importProfilFirme } = require('./utils/wix-data');
+const cors = require('cors');
+const { getFirmeFaraLead } = require('./utils/wix-data');
 const { genereazaLeadAI } = require('./utils/openai');
-const { salveazaLead } = require('./utils/salvare-lead');
-const { v4: uuidv4 } = require('uuid');
+const { salveazaLeadInWix } = require('./utils/wix-leads');
 
-dotenv.config();
 const app = express();
+app.use(cors());
 app.use(bodyParser.json());
 
-const PORT = process.env.PORT || 3000;
-
 app.get('/', (req, res) => {
-  res.send('Skyward Flow server e activ 🚀');
+  res.send('🧠 Skyward Flow AI Server');
 });
 
-app.post('/genereaza', async (req, res) => {
-  try {
-    const firma = req.body;
-    if (!firma || !firma.inputNumeFirma || !firma._id) {
-      console.error("❌ Lipsesc datele firmei:", firma);
-      return res.status(400).json({ error: 'Date firmă invalide' });
-    }
-
-    const rezultat = await genereazaLeadAI(firma);
-
-    if (!rezultat || !rezultat.clientNameText || !rezultat.clientEmailText || !rezultat.mesajCatreClientText) {
-      console.error("❌ Leadul generat nu e valid:", rezultat);
-      return res.status(400).json({ error: 'Lead invalid generat' });
-    }
-
-    const lead = {
-      _id: uuidv4(),
-      firmaId: firma._id,
-      ...rezultat,
-      status: 'nou',
-      dataText: new Date().toISOString()
-    };
-
-    await salveazaLead(lead);
-
-    console.log("✅ Lead salvat:", lead.clientNameText);
-    res.json({ success: true, lead });
-  } catch (err) {
-    console.error("❌ Eroare generală în procesul de generare/salvare:", err.message);
-    res.status(500).json({ error: 'Eroare internă' });
-  }
-});
-
-// Endpoint nou pentru cronjob
 app.get('/firme-fara-lead', async (req, res) => {
   try {
-    console.log("🔍 Caut firme fără lead generat recent...");
-    const firme = await importProfilFirme();
+    console.log('🔄 Pornit GET /firme-fara-lead');
+    const firme = await getFirmeFaraLead();
+
+    if (!Array.isArray(firme)) {
+      console.error('❌ Răspuns invalid din getFirmeFaraLead');
+      return res.status(500).json({ error: 'Răspuns invalid de la getFirmeFaraLead' });
+    }
 
     const firmeFaraLead = firme.filter((firma) => {
       const last = firma.lastGenerated;
@@ -64,14 +32,45 @@ app.get('/firme-fara-lead', async (req, res) => {
       return diffMinutes >= 5;
     });
 
-    console.log(`📦 ${firmeFaraLead.length} firme fără lead recent`);
-    res.json({ firme: firmeFaraLead });
+    console.log(`📊 Firme fără lead recent: ${firmeFaraLead.length}`);
+    res.json(firmeFaraLead);
   } catch (err) {
-    console.error("❌ Eroare la /firme-fara-lead:", err.message);
-    res.status(500).json({ error: 'Eroare internă la /firme-fara-lead' });
+    console.error('❌ Eroare la /firme-fara-lead:', err.message);
+    res.status(500).json({ error: 'Eroare la /firme-fara-lead' });
   }
 });
 
+app.post('/genereaza', async (req, res) => {
+  try {
+    const firma = req.body;
+    if (!firma || !firma.inputNumeFirma || !firma.inputCodCaen) {
+      return res.status(400).json({ error: 'Lipsesc datele firmei' });
+    }
+
+    console.log(`📦 Firma utilizator: ${firma.inputNumeFirma}`);
+    const rezultat = await genereazaLeadAI(firma);
+
+    if (!rezultat || !rezultat.clientNameText || !rezultat.clientEmailText || !rezultat.mesajCatreClientText) {
+      return res.status(200).json({ error: 'Leadul generat este incomplet sau invalid.', lead: rezultat });
+    }
+
+    const leadFinal = {
+      ...rezultat,
+      firmaId: firma._id,
+      dataText: new Date().toISOString(),
+      status: 'generat'
+    };
+
+    await salveazaLeadInWix(leadFinal);
+    console.log('✅ Lead salvat cu succes.');
+    res.json({ success: true, lead: leadFinal });
+  } catch (err) {
+    console.error('❌ Eroare generală în procesul de generare/salvare:', err.message);
+    res.status(500).json({ error: 'Eroare generală în generarea/salvarea leadului' });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Serverul rulează pe portul ${PORT}`);
+  console.log(`🚀 Server pornit pe portul ${PORT}`);
 });
