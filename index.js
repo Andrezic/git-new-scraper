@@ -13,40 +13,39 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.json());
 
-// 🔄 Endpoint cronjob (în lucru)
-app.get('/firme-fara-lead', async (req, res) => {
-  console.log('🔄 Pornit GET /firme-fara-lead');
-  res.status(404).json({ error: 'Endpoint în curs de implementare' });
-});
-
-// ✅ Endpoint principal – generare lead
 app.post('/genereaza', async (req, res) => {
   try {
     const firma = req.body.firma;
     console.log("📥 Firma primită:", firma);
 
+    // 🔍 Extragem ID-ul din orice formă (firma._id sau firma.firmaId)
     const firmaId = firma?._id || firma?.firmaId;
+
     if (!firma || !firmaId) {
+      console.log("❌ Firma invalidă sau firmaId lipsă");
       return res.status(400).json({ error: "Lipseste firmaId" });
     }
 
-    // ✅ Apel AI
+    // 🔄 Generează lead
     const rezultat = await genereazaLeadAI(firma);
 
-    if (rezultat.error) {
-      return res.status(500).json({ error: rezultat.error });
+    if (!rezultat || rezultat.error) {
+      console.error("❌ Eroare la generare lead AI:", rezultat.error || "Fără răspuns");
+      return res.status(500).json({ error: rezultat.error || "Eroare AI" });
     }
 
-    // ✅ Salvare lead în Wix
-    const salvat = await salveazaLead(rezultat, firmaId);
+    // 💾 Salvează lead
+    const leadSalvat = await salveazaLead(rezultat, firmaId);
 
-    return res.json({ success: true, lead: salvat });
+    console.log("✅ Lead generat și salvat:", leadSalvat);
+    return res.status(200).json({ success: true, lead: leadSalvat });
+
   } catch (e) {
-    console.error("❌ Eroare în /genereaza:", e);
+    console.error("❌ Eroare server la /genereaza:", e);
     return res.status(500).json({ error: "Eroare server la generare lead" });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server pornit pe portul ${PORT}`);
+  console.log(`🚀 Serverul rulează pe portul ${PORT}`);
 });
