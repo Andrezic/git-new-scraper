@@ -24,12 +24,9 @@ app.get('/firme-fara-lead', async (req, res) => {
     }
 
     const firmeFaraLead = firme.filter((firma) => {
-      const last = firma.lastGenerated;
-      if (!last) return true;
-
-      const lastDate = new Date(last);
-      const diffMinutes = (Date.now() - lastDate.getTime()) / (1000 * 60);
-      return diffMinutes >= 5;
+      if (!firma.lastGenerated) return true;
+      const last = new Date(firma.lastGenerated);
+      return isFinite(last.getTime()) && ((Date.now() - last.getTime()) / (1000 * 60)) >= 5;
     });
 
     console.log(`📊 Firme fără lead recent: ${firmeFaraLead.length}`);
