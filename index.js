@@ -1,56 +1,76 @@
 const express = require('express');
-const cors = require('cors');
 const bodyParser = require('body-parser');
-const { genereazaLead } = require('./utils/openai');
+const cors = require('cors');
+require('dotenv').config();
+
+const { genereazaLeadAI } = require('./utils/openai');
 const { getFirmaById } = require('./utils/wix-data');
-const { salveazaLead } = require('./utils/wix-leads');
+const { salveazaLeadNou } = require('./utils/wix-leads');
 
 const app = express();
+const port = 3000;
+
 app.use(cors());
 app.use(bodyParser.json());
 
-const PORT = process.env.PORT || 3000;
+app.get('/', (req, res) => {
+  res.send('✅ Serverul funcționează!');
+});
 
-// ✅ GET /firme-fara-lead – aici decizi tu cum identifici firmele fără leaduri (temporar e gol)
 app.get('/firme-fara-lead', async (req, res) => {
   console.log('🔄 Pornit GET /firme-fara-lead');
   try {
-    return res.status(200).json({ message: 'Temporar gol – TODO logica' });
-  } catch (err) {
-    console.error('❌ Eroare la getFirmeFaraLead:', err.message);
-    return res.status(500).json({ error: err.message });
+    const response = await getFirmaById(null, true); // true = doar firme fără lead
+    if (!response) {
+      return res.status(404).json({ error: 'Nicio firmă fără leaduri disponibile' });
+    }
+    res.json(response);
+  } catch (error) {
+    console.error('❌ Eroare la getFirmeFaraLead:', error.message);
+    res.status(500).json({ error: 'Eroare la obținerea firmelor fără lead' });
   }
 });
 
-// ✅ POST /genereaza
 app.post('/genereaza', async (req, res) => {
-  console.log('🔄 POST /genereaza');
-
-  const firmaId = req.body?.firmaId;
-  if (!firmaId) {
-    return res.status(400).json({ error: 'Lipsesc datele firmei' });
-  }
+  const { firmaId } = req.body;
+  console.log('🔧 POST /genereaza firmaId:', firmaId);
 
   try {
     const firma = await getFirmaById(firmaId);
-    if (!firma) {
-      return res.status(404).json({ error: 'Firma nu a fost găsită' });
+    if (!firma || !firma.inputNumeFirma) {
+      return res.status(400).json({ error: 'Lipsesc datele firmei' });
     }
 
-    const lead = await genereazaLead(firma);
-    if (!lead || !lead.clientNameText || !lead.clientEmailText) {
-      console.log('⚠️ Lead invalid:', lead);
-      return res.status(400).json({ error: 'Leadul generat este incomplet sau invalid' });
-    }
+    console.log('📦 Firma primită:', firma);
 
-    const rezultat = await salveazaLead(firmaId, lead);
-    return res.status(200).json(rezultat);
-  } catch (err) {
-    console.error('❌ Eroare generare lead:', err);
-    return res.status(500).json({ error: 'Eroare server la generare lead' });
+    // TODO: Aici vei avea nevoie de un sistem real de generare leaduri prin scraping
+    const leadPropus = {
+      clientNameText: 'Nume Client Test',
+      clientEmailText: 'client@exemplu.com',
+      clientTelefonText: '0712345678',
+      clientWebsiteText: 'https://www.exemplu.com',
+    };
+
+    // Apel GPT pentru generarea mesajului personalizat
+    const rezultatAI = await genereazaLeadAI({ firmaUtilizator: firma, leadPropus });
+
+    const leadFinal = {
+      ...leadPropus,
+      mesajCatreClientText: rezultatAI.mesajFinal,
+      firmaId: firma._id,
+      status: 'trimis',
+      dataText: new Date().toISOString()
+    };
+
+    const rezultatSalvare = await salveazaLeadNou(leadFinal);
+
+    res.json({ mesaj: 'Lead generat și salvat cu succes', lead: rezultatSalvare });
+  } catch (error) {
+    console.error('❌ Eroare în /genereaza:', error.message);
+    res.status(500).json({ error: 'Eroare server la generare lead' });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server pornit pe portul ${PORT}`);
+app.listen(port, () => {
+  console.log(`🚀 Server pornit pe portul ${port}`);
 });
