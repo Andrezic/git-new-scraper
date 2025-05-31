@@ -1,7 +1,7 @@
 
 const axios = require('axios');
 
-async function salveazaLeadInWix(lead, firmaId) {
+async function salveazaLead(lead, firmaId) {
   try {
     const payload = {
       clientNameText: lead.clientNameText || '',
