@@ -1,74 +1,58 @@
+
 const express = require('express');
-const bodyParser = require('body-parser');
+const axios = require('axios');
 const cors = require('cors');
+const dotenv = require('dotenv');
+const { genereazaLead } = require('./utils/openai');
+const { salveazaLead } = require('./utils/wix-leads');
 const { getFirmeFaraLead } = require('./utils/wix-data');
-const { genereazaLeadAI } = require('./utils/openai');
-const { salveazaLeadInWix } = require('./utils/wix-leads');
 
+dotenv.config();
 const app = express();
+const port = process.env.PORT || 3000;
+
 app.use(cors());
-app.use(bodyParser.json());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
+// Health check
 app.get('/', (req, res) => {
-  res.send('🧠 Skyward Flow AI Server');
+  res.send('✅ Server funcționează!');
 });
 
-app.get('/firme-fara-lead', async (req, res) => {
-  try {
-    console.log('🔄 Pornit GET /firme-fara-lead');
-    const firme = await getFirmeFaraLead();
-
-    if (!Array.isArray(firme)) {
-      console.error('❌ Răspuns invalid din getFirmeFaraLead');
-      return res.status(500).json({ error: 'Răspuns invalid de la getFirmeFaraLead' });
-    }
-
-    const firmeFaraLead = firme.filter((firma) => {
-      if (!firma.lastGenerated) return true;
-      const last = new Date(firma.lastGenerated);
-      return isFinite(last.getTime()) && ((Date.now() - last.getTime()) / (1000 * 60)) >= 5;
-    });
-
-    console.log(`📊 Firme fără lead recent: ${firmeFaraLead.length}`);
-    res.json(firmeFaraLead);
-  } catch (err) {
-    console.error('❌ Eroare la /firme-fara-lead:', err.message);
-    res.status(500).json({ error: 'Eroare la /firme-fara-lead' });
-  }
-});
-
+// POST /genereaza - generează lead pentru o firmă dată
 app.post('/genereaza', async (req, res) => {
   try {
+    console.log('📥 Body primit:', req.body);
     const firma = req.body;
+
     if (!firma || !firma.inputNumeFirma || !firma.inputCodCaen) {
       return res.status(400).json({ error: 'Lipsesc datele firmei' });
     }
 
-    console.log(`📦 Firma utilizator: ${firma.inputNumeFirma}`);
-    const rezultat = await genereazaLeadAI(firma);
+    const rezultat = await genereazaLead(firma);
+    if (rezultat.error) return res.json({ lead: rezultat });
 
-    if (!rezultat || !rezultat.clientNameText || !rezultat.clientEmailText || !rezultat.mesajCatreClientText) {
-      return res.status(200).json({ error: 'Leadul generat este incomplet sau invalid.', lead: rezultat });
-    }
-
-    const leadFinal = {
-      ...rezultat,
-      firmaId: firma._id,
-      dataText: new Date().toISOString(),
-      status: 'generat'
-    };
-
-    await salveazaLeadInWix(leadFinal);
-    console.log('✅ Lead salvat cu succes.');
-    res.json({ success: true, lead: leadFinal });
+    const leadSalvat = await salveazaLead(firma, rezultat);
+    res.json({ success: true, lead: leadSalvat });
   } catch (err) {
-    console.error('❌ Eroare generală în procesul de generare/salvare:', err.message);
-    res.status(500).json({ error: 'Eroare generală în generarea/salvarea leadului' });
+    console.error('❌ Eroare în /genereaza:', err);
+    res.status(500).json({ error: 'Eroare server la generare lead' });
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server pornit pe portul ${PORT}`);
+// GET /firme-fara-lead - returnează firmele care nu au primit încă lead
+app.get('/firme-fara-lead', async (req, res) => {
+  try {
+    console.log('🔄 Pornit GET /firme-fara-lead');
+    const firme = await getFirmeFaraLead();
+    res.json(firme);
+  } catch (err) {
+    console.error('❌ Eroare la /firme-fara-lead:', err.message);
+    res.status(500).json({ error: 'Eroare server la obținere firme' });
+  }
+});
+
+app.listen(port, () => {
+  console.log(`🚀 Server pornit pe portul ${port}`);
 });
