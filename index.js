@@ -1,68 +1,54 @@
-
 const express = require('express');
-const axios = require('axios');
 const cors = require('cors');
-const dotenv = require('dotenv');
-const { genereazaLead } = require('./utils/openai');
-const { salveazaLead } = require('./utils/wix-leads');
-const { getFirmeFaraLead } = require('./utils/wix-data');
+const bodyParser = require('body-parser');
+require('dotenv').config();
 
-dotenv.config();
+const { genereazaLeadAI } = require('./utils/openai');
+const { salveazaLead } = require('./utils/wix-leads');
+const { getFirmaById } = require('./utils/wix-data');
+
 const app = express();
-const port = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.json({ limit: '1mb' }));
 
-// Health check
-app.get('/', (req, res) => {
-  res.send('✅ Server funcționează!');
-});
-
-// POST /genereaza - generează lead pentru o firmă dată
+// ================== TEST POST LOCAL ==================
 app.post('/genereaza', async (req, res) => {
   try {
-    const firma = req.body.firma || req.body;
-    console.log("📥 Firma primită:", firma);
+    const { firmaId, leadPropus } = req.body;
 
-    if (!firma || !firma.inputNumeFirma || !firma.inputCodCaen) {
-      console.warn("⚠️ Verificare eșuată: lipsesc câmpuri esențiale");
-      return res.status(400).json({ error: "Lipsesc datele firmei" });
+    if (!firmaId || !leadPropus) {
+      return res.status(400).json({ error: 'Lipsesc datele firmei sau ale leadului propus' });
     }
 
-    console.log("🧠 Apelez genereazaLead...");
-    const rezultat = await genereazaLead(firma);
-    console.log("✅ Răspuns genereazaLead:", rezultat);
-
-    if (rezultat.error) {
-      console.warn("⚠️ Lead invalid:", rezultat);
-      return res.json({ lead: rezultat });
+    const firma = await getFirmaById(firmaId);
+    if (!firma || !firma.inputNumeFirma) {
+      return res.status(404).json({ error: 'Firma nu a fost găsită în baza de date' });
     }
 
-    console.log("📦 Apelez salveazaLead...");
-    const leadSalvat = await salveazaLead(firma, rezultat);
-    console.log("✅ Lead salvat:", leadSalvat);
+    const raspunsAI = await genereazaLeadAI({ firmaUtilizator: firma, leadPropus });
+    const json = JSON.parse(raspunsAI);
 
-    res.json({ success: true, lead: leadSalvat });
+    if (json.error) {
+      return res.status(200).json({ success: true, lead: json });
+    }
+
+    // Salvează lead valid în CMS
+    await salveazaLead(firmaId, json);
+    return res.status(200).json({ success: true, lead: json });
+
   } catch (err) {
-    console.error("❌ Eroare în /genereaza:", err);
-    res.status(500).json({ error: "Eroare server la generare lead", details: err.message });
+    console.error('❌ Eroare la generare:', err.message);
+    return res.status(500).json({ error: 'Eroare server la generare lead' });
   }
 });
 
-// GET /firme-fara-lead - returnează firmele care nu au primit încă lead
-app.get('/firme-fara-lead', async (req, res) => {
-  try {
-    console.log("🔄 Pornit GET /firme-fara-lead");
-    const firme = await getFirmeFaraLead();
-    res.json(firme);
-  } catch (err) {
-    console.error("❌ Eroare la /firme-fara-lead:", err.message);
-    res.status(500).json({ error: "Eroare server la obținere firme" });
-  }
+// ================== HEALTHCHECK ==================
+app.get('/', (req, res) => {
+  res.send('✅ Skyward Flow AI Server Live');
 });
 
-app.listen(port, () => {
-  console.log(`🚀 Server pornit pe portul ${port}`);
+app.listen(PORT, () => {
+  console.log(`🚀 Server pornit pe portul ${PORT}`);
 });
