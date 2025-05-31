@@ -3,7 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const { genereazaLeadAI } = require('./utils/openai');
-const { salveazaLeadNou } = require('./wix-leads');
+const { salveazaLead } = require('./utils/wix-leads');
 const { getFirmaById } = require('./wix-data');
 
 const app = express();
