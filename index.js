@@ -27,7 +27,7 @@ app.post('/genereaza', async (req, res) => {
     }
 
     // 🔄 Generează lead
-    const rezultat = await genereazaLeadAI(firma);
+    const rezultat = await genereazaLead(firma);
 
     if (!rezultat || rezultat.error) {
       console.error("❌ Eroare la generare lead AI:", rezultat.error || "Fără răspuns");
