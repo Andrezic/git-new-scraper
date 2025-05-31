@@ -1,18 +1,18 @@
+// utils/wix-data.js
 const axios = require('axios');
 
-async function getFirmaById(firmaId, doarFirmeFaraLead = false) {
-  try {
-    if (doarFirmeFaraLead) {
-      const { data } = await axios.get('https://www.skywardflow.com/_functions/firme-fara-lead');
-      return data;
+async function getFirmaById(firmaId) {
+  const response = await axios.post('https://www.skywardflow.com/_functions-dev/get-profil-firme', {
+    firmaId
+  }, {
+    headers: {
+      Authorization: process.env.WIX_API_KEY,
+      'Content-Type': 'application/json'
     }
+  });
 
-    const { data } = await axios.get(`https://www.skywardflow.com/_functions/profil-firma/${firmaId}`);
-    return data;
-  } catch (error) {
-    console.error('❌ Eroare getFirmaById:', error.message);
-    throw error;
-  }
+  return response.data;
 }
+
 
 module.exports = { getFirmaById };
