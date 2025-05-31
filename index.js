@@ -1,52 +1,54 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-require('dotenv').config();
-
-const { genereazaLeadAI } = require('./utils/openai');
-const { salveazaLead } = require('./utils/wix-leads');
+const { genereazaLead } = require('./utils/openai');
 const { getFirmaById } = require('./utils/wix-data');
+const { salveazaLead } = require('./utils/wix-leads');
 
 const app = express();
+app.use(cors());
+app.use(bodyParser.json());
+
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
-app.use(bodyParser.json({ limit: '1mb' }));
-
-// ================== TEST POST LOCAL ==================
-app.post('/genereaza', async (req, res) => {
+// ✅ GET /firme-fara-lead – aici decizi tu cum identifici firmele fără leaduri (temporar e gol)
+app.get('/firme-fara-lead', async (req, res) => {
+  console.log('🔄 Pornit GET /firme-fara-lead');
   try {
-    const { firmaId, leadPropus } = req.body;
-
-    if (!firmaId || !leadPropus) {
-      return res.status(400).json({ error: 'Lipsesc datele firmei sau ale leadului propus' });
-    }
-
-    const firma = await getFirmaById(firmaId);
-    if (!firma || !firma.inputNumeFirma) {
-      return res.status(404).json({ error: 'Firma nu a fost găsită în baza de date' });
-    }
-
-    const raspunsAI = await genereazaLeadAI({ firmaUtilizator: firma, leadPropus });
-    const json = JSON.parse(raspunsAI);
-
-    if (json.error) {
-      return res.status(200).json({ success: true, lead: json });
-    }
-
-    // Salvează lead valid în CMS
-    await salveazaLead(firmaId, json);
-    return res.status(200).json({ success: true, lead: json });
-
+    return res.status(200).json({ message: 'Temporar gol – TODO logica' });
   } catch (err) {
-    console.error('❌ Eroare la generare:', err.message);
-    return res.status(500).json({ error: 'Eroare server la generare lead' });
+    console.error('❌ Eroare la getFirmeFaraLead:', err.message);
+    return res.status(500).json({ error: err.message });
   }
 });
 
-// ================== HEALTHCHECK ==================
-app.get('/', (req, res) => {
-  res.send('✅ Skyward Flow AI Server Live');
+// ✅ POST /genereaza
+app.post('/genereaza', async (req, res) => {
+  console.log('🔄 POST /genereaza');
+
+  const firmaId = req.body?.firmaId;
+  if (!firmaId) {
+    return res.status(400).json({ error: 'Lipsesc datele firmei' });
+  }
+
+  try {
+    const firma = await getFirmaById(firmaId);
+    if (!firma) {
+      return res.status(404).json({ error: 'Firma nu a fost găsită' });
+    }
+
+    const lead = await genereazaLead(firma);
+    if (!lead || !lead.clientNameText || !lead.clientEmailText) {
+      console.log('⚠️ Lead invalid:', lead);
+      return res.status(400).json({ error: 'Leadul generat este incomplet sau invalid' });
+    }
+
+    const rezultat = await salveazaLead(firmaId, lead);
+    return res.status(200).json(rezultat);
+  } catch (err) {
+    console.error('❌ Eroare generare lead:', err);
+    return res.status(500).json({ error: 'Eroare server la generare lead' });
+  }
 });
 
 app.listen(PORT, () => {
