@@ -8,6 +8,7 @@ const { salveazaLeadInWix } = require('./utils/wix-leads');
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+app.use(express.json());
 
 app.get('/', (req, res) => {
   res.send('🧠 Skyward Flow AI Server');
