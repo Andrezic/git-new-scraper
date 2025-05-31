@@ -30,4 +30,4 @@ async function salveazaLeadInWix(lead, firmaId) {
   }
 }
 
-module.exports = { salveazaLeadInWix };
+module.exports = { salveazaLead };
