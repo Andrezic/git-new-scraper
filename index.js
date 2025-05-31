@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const { genereazaLeadAI } = require('./utils/openai');
 const { salveazaLead } = require('./utils/wix-leads');
-const { getFirmaById } = require('./wix-data');
+const { getFirmaById } = require('./utils/wix-data');
 
 const app = express();
 app.use(cors());
