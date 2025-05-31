@@ -1,16 +1,13 @@
-// utils/wix-data.js
 const axios = require('axios');
 
-async function importProfilFirme() {
+async function getFirmeFaraLead() {
   try {
-    const response = await axios.post('https://www.skywardflow.com/_functions/get-profil-firme', {});
-    return response.data;
-  } catch (error) {
-    console.error('❌ Eroare la importProfilFirme:', error.message);
-    throw error;
+    const response = await axios.get('https://www.skywardflow.com/_functions/firme-fara-lead');
+    return response.data.firme || [];
+  } catch (err) {
+    console.error('❌ Eroare la getFirmeFaraLead:', err.message);
+    return [];
   }
 }
 
-module.exports = {
-  importProfilFirme,
-};
+module.exports = { getFirmeFaraLead };

@@ -1,34 +1,14 @@
 const axios = require('axios');
-const { exec } = require('child_process');
 
 (async () => {
   try {
-    const apiUrl = `https://git-new-scraper.onrender.com/firme-fara-lead`;
-    console.log("🔄 Cerere către:", apiUrl);
+    const backendUrl = 'https://git-new-scraper.onrender.com';
+    const url = `${backendUrl}/firme-fara-lead`;
 
-    const response = await axios.get(apiUrl);
-    const firme = response.data.firme || [];
-
-    if (firme.length === 0) {
-      console.log("⏸️ Nicio firmă nouă de procesat.");
-      return;
-    }
-
-    for (const firma of firme) {
-      const firmaId = firma._id;
-      if (!firmaId) continue;
-
-      console.log(`🚀 Pornesc scraper pentru firma: ${firma.inputNumeFirma} (${firmaId})`);
-
-      exec(`node scraper.js ${firmaId}`, (error, stdout, stderr) => {
-        if (error) {
-          console.error(`❌ Eroare scraper pentru ${firmaId}:`, stderr || error.message);
-        } else {
-          console.log(`✅ Scraper OK pentru ${firmaId}:\n${stdout}`);
-        }
-      });
-    }
+    console.log('🔄 Cerere către:', url);
+    const response = await axios.get(url);
+    console.log('✅ Răspuns:', response.data);
   } catch (err) {
-    console.error("❌ Cronjob general error:", err.message);
+    console.error('❌ Cronjob general error:', err.message);
   }
 })();
