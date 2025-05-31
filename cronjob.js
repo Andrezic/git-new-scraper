@@ -1,3 +1,4 @@
+
 require('dotenv').config();
 const axios = require('axios');
 const { exec } = require('child_process');
@@ -11,8 +12,12 @@ const { exec } = require('child_process');
       const firmaId = firma._id;
       console.log(`⏳ Rulez scraper pentru firma fără lead: ${firmaId}`);
       exec(`node scraper.js ${firmaId}`, (err, stdout, stderr) => {
-        if (err) return console.error(`❌ Scraper EROARE ${firmaId}:`, stderr);
-        console.log(`✅ Scraper OK pentru ${firmaId}`);
+        if (err) {
+          console.error(`❌ Scraper EROARE pentru ${firmaId}:`, stderr);
+        } else {
+          console.log(`✅ Scraper OK pentru ${firmaId}:
+${stdout}`);
+        }
       });
     }
   } catch (err) {
