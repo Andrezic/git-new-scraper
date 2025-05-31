@@ -23,21 +23,31 @@ app.get('/', (req, res) => {
 // POST /genereaza - generează lead pentru o firmă dată
 app.post('/genereaza', async (req, res) => {
   try {
-    const firma = req.body.firma || req.body; // acceptă ambele variante
+    const firma = req.body.firma || req.body;
     console.log("📥 Firma primită:", firma);
 
     if (!firma || !firma.inputNumeFirma || !firma.inputCodCaen) {
+      console.warn("⚠️ Verificare eșuată: lipsesc câmpuri esențiale");
       return res.status(400).json({ error: "Lipsesc datele firmei" });
     }
 
+    console.log("🧠 Apelez genereazaLead...");
     const rezultat = await genereazaLead(firma);
-    if (rezultat.error) return res.json({ lead: rezultat });
+    console.log("✅ Răspuns genereazaLead:", rezultat);
 
+    if (rezultat.error) {
+      console.warn("⚠️ Lead invalid:", rezultat);
+      return res.json({ lead: rezultat });
+    }
+
+    console.log("📦 Apelez salveazaLead...");
     const leadSalvat = await salveazaLead(firma, rezultat);
+    console.log("✅ Lead salvat:", leadSalvat);
+
     res.json({ success: true, lead: leadSalvat });
   } catch (err) {
     console.error("❌ Eroare în /genereaza:", err);
-    res.status(500).json({ error: "Eroare server la generare lead" });
+    res.status(500).json({ error: "Eroare server la generare lead", details: err.message });
   }
 });
 
