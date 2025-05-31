@@ -6,11 +6,13 @@ const { genereazaLeadAI } = require('./utils/openai');
 const { salveazaLead } = require('./utils/wix-leads');
 const { getFirmaById } = require('./utils/wix-data');
 
+const express = require('express');
 const app = express();
+const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
+app.use(express.json());
 
-const PORT = process.env.PORT || 3000;
 
 // 🔄 GET endpoint pentru debug (cronjob)
 app.get('/firme-fara-lead', async (req, res) => {
