@@ -16,6 +16,7 @@ async function salveazaLead(lead, firmaId) {
   }
 }
 
+// 👇 EXPORT CORECT
 module.exports = {
   salveazaLead,
 };
