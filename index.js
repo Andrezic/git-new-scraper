@@ -20,14 +20,14 @@ app.get('/', (req, res) => {
 app.get('/firme-fara-lead', async (req, res) => {
   console.log('🔄 Pornit GET /firme-fara-lead');
   try {
-    const response = await getFirmaById(null, true); // true = doar firme fără lead
-    if (!response) {
-      return res.status(404).json({ error: 'Nicio firmă fără leaduri disponibile' });
+    const firma = await getFirmaById(null, true);
+    if (!firma || !firma._id) {
+      return res.status(404).json({ error: 'Nicio firmă fără leaduri' });
     }
-    res.json(response);
+    res.json(firma);
   } catch (error) {
     console.error('❌ Eroare la getFirmeFaraLead:', error.message);
-    res.status(500).json({ error: 'Eroare la obținerea firmelor fără lead' });
+    res.status(500).json({ error: 'Eroare server' });
   }
 });
 
@@ -43,15 +43,13 @@ app.post('/genereaza', async (req, res) => {
 
     console.log('📦 Firma primită:', firma);
 
-    // TODO: Aici vei avea nevoie de un sistem real de generare leaduri prin scraping
     const leadPropus = {
       clientNameText: 'Nume Client Test',
       clientEmailText: 'client@exemplu.com',
       clientTelefonText: '0712345678',
-      clientWebsiteText: 'https://www.exemplu.com',
+      clientWebsiteText: 'https://www.exemplu.com'
     };
 
-    // Apel GPT pentru generarea mesajului personalizat
     const rezultatAI = await genereazaLeadAI({ firmaUtilizator: firma, leadPropus });
 
     const leadFinal = {
@@ -63,8 +61,8 @@ app.post('/genereaza', async (req, res) => {
     };
 
     const rezultatSalvare = await salveazaLeadNou(leadFinal);
+    res.json({ mesaj: '✅ Lead generat', lead: rezultatSalvare });
 
-    res.json({ mesaj: 'Lead generat și salvat cu succes', lead: rezultatSalvare });
   } catch (error) {
     console.error('❌ Eroare în /genereaza:', error.message);
     res.status(500).json({ error: 'Eroare server la generare lead' });

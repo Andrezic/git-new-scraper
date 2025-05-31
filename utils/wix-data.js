@@ -1,13 +1,18 @@
 const axios = require('axios');
 
-async function getFirmeFaraLead() {
+async function getFirmaById(firmaId, doarFirmeFaraLead = false) {
   try {
-    const response = await axios.get('https://www.skywardflow.com/_functions/firme-fara-lead');
-    return response.data.firme || [];
-  } catch (err) {
-    console.error('❌ Eroare la getFirmeFaraLead:', err.message);
-    return [];
+    if (doarFirmeFaraLead) {
+      const { data } = await axios.get('https://www.skywardflow.com/_functions/firme-fara-lead');
+      return data;
+    }
+
+    const { data } = await axios.get(`https://www.skywardflow.com/_functions/profil-firma/${firmaId}`);
+    return data;
+  } catch (error) {
+    console.error('❌ Eroare getFirmaById:', error.message);
+    throw error;
   }
 }
 
-module.exports = { getFirmeFaraLead };
+module.exports = { getFirmaById };
