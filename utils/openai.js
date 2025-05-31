@@ -8,7 +8,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 const mdPath = path.join(__dirname, '..', 'coduri_CAEN_b2b_detaliat.md');
 const coduriCaen = fs.existsSync(mdPath) ? fs.readFileSync(mdPath, 'utf8') : '';
 
-async function genereazaLead(firma) {
+async function genereazaLeadAI(firma) {
   const prompt = `
 Tu ești Alex, cel mai bun agent AI de Business Match B2B. Scanează datele firmei de mai jos și oferă o oportunitate de colaborare B2B reală, verificată și potrivită. NU inventa leaduri dacă nu există o potrivire clară. Folosește CAEN-ul, serviciile și datele relevante. La final, generează un mesaj personalizat, în numele firmei, care va fi trimis clientului.
 
@@ -60,4 +60,4 @@ Răspunsul tău trebuie să conțină:
   return lead;
 }
 
-module.exports = { genereazaLead };
+module.exports = { genereazaLeadAI };
