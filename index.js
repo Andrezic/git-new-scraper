@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 require('dotenv').config();
 
-const { genereazaLeadAI } = require('./utils/openai'); // <-- corect
+const { genereazaLead } = require('./utils/openai'); // <-- corect
 const { getFirmaById } = require('./utils/wix-data');
 const { salveazaLeadNou } = require('./utils/wix-leads');
 

@@ -1,74 +1,63 @@
-
-require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
-const { default: OpenAI } = require('openai');
+const { OpenAI } = require('openai');
+require('dotenv').config();
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const mdPath = path.join(__dirname, '..', 'coduri_CAEN_b2b_detaliat.md');
-const coduriCaenContent = fs.readFileSync(mdPath, 'utf-8');
+const coduriCaen = fs.existsSync(mdPath) ? fs.readFileSync(mdPath, 'utf8') : '';
 
-async function genereazaLeadAI({ firmaUtilizator, leadPropus }) {
-  console.log('[🧠 AI] Firma utilizator:', firmaUtilizator.inputNumeFirma);
-  console.log('[🧠 AI] Lead propus:', leadPropus.clientNameText);
-
+async function genereazaLead(firma) {
   const prompt = `
-Tu ești un sistem AI avansat format din 4 agenți colaborativi. Scopul tău este să validezi leadul propus mai jos pentru firma care caută parteneri B2B. Nu ai voie să inventezi. Dacă leadul nu este valid sau nu este potrivit, explică motivul. Dacă este potrivit, redactează mesajul de contact conform regulilor.
+Tu ești Alex, cel mai bun agent AI de Business Match B2B. Scanează datele firmei de mai jos și oferă o oportunitate de colaborare B2B reală, verificată și potrivită. NU inventa leaduri dacă nu există o potrivire clară. Folosește CAEN-ul, serviciile și datele relevante. La final, generează un mesaj personalizat, în numele firmei, care va fi trimis clientului.
 
-🔍 Firma utilizator:
-- Nume: ${firmaUtilizator.inputNumeFirma}
-- Servicii: ${firmaUtilizator.inputServicii}
-- Prețuri: ${firmaUtilizator.inputPreturi}
-- Avantaje: ${firmaUtilizator.inputAvantaje}
-- Cod CAEN: ${firmaUtilizator.inputCodCaen}
-- Localizare: ${JSON.stringify(firmaUtilizator.inputLocalizare)}
-- Tip clienți: ${firmaUtilizator.inputTipClienti}
-- Website: ${firmaUtilizator.inputWebsiteFirma}
-- CUI: ${firmaUtilizator.inputCui}
+Date firmă:
+Nume: ${firma.inputNumeFirma}
+CAEN: ${firma.inputCodCaen}
+CUI: ${firma.inputCui}
+Email: ${firma.inputEmailFirma}
+Telefon: ${firma.inputTelefonFirma}
+Website: ${firma.inputWebsiteFirma}
+Servicii: ${firma.inputServicii}
+Avantaje: ${firma.inputAvantaje}
+Prețuri: ${firma.inputPreturi}
+Tip clienți: ${firma.inputTipClienti}
+Dimensiune client dorit: ${firma.inputDimensiuneClient}
+Cuvinte cheie: ${firma.inputKeywords}
+Descriere: ${firma.inputDescriere}
+Țintire geografică: ${firma.inputTintireGeo?.formatted || ''}
+Localizare firmă: ${firma.inputLocalizare?.formatted || ''}
 
-📄 Lista CAEN compatibilități:
-${coduriCaenContent}
+Coduri CAEN compatibile: 
+${coduriCaen}
 
-🏢 Lead propus:
-- Nume client: ${leadPropus.clientNameText}
-- Email: ${leadPropus.clientEmailText}
-- Website: ${leadPropus.clientWebsiteText}
-- Telefon: ${leadPropus.clientTelefonText}
-
-👩‍💻 *Mara* validează dacă firma e reală, cu site activ.
-🧑‍💼 *Alex* verifică dacă datele sunt valide și active.
-📊 *Radu* analizează dacă e un match potrivit pentru utilizator.
-✍️ *Ana* scrie un email de contact în numele ${firmaUtilizator.inputNumeFirma}, nu Skyward Flow. Include:
-- Salut personalizat
-- Ce oferim
-- De ce clientul este potrivit
-- Call to action clar
-- Semnătură cu ${firmaUtilizator.inputNumeFirma}
-
-⚠️ Dacă leadul NU este valid, răspunde EXCLUSIV în format JSON:
-{ "error": "Explică clar de ce leadul nu este valid sau compatibil." }
-
-✅ Dacă leadul este valid, răspunde EXCLUSIV în format JSON valid cu următoarele câmpuri:
-{
-  "clientNameText": "...",
-  "clientEmailText": "...",
-  "clientWebsiteText": "...",
-  "clientTelefonText": "...",
-  "mesajCatreClientText": "..."
-}
+Răspunsul tău trebuie să conțină:
+1. Numele firmei/clientului găsit
+2. Email client
+3. Telefon client (dacă este)
+4. Website client
+5. Mesaj personalizat în numele utilizatorului către acest client
 `;
 
   const completion = await openai.chat.completions.create({
     model: 'gpt-4o',
-    messages: [
-      { role: 'system', content: prompt },
-      { role: 'user', content: 'Evaluează leadul propus și răspunde în format JSON.' }
-    ],
+    messages: [{ role: 'user', content: prompt }],
     temperature: 0.6
   });
 
-  return completion.choices[0].message.content;
+  const output = completion.choices[0].message.content;
+
+  // Simplu extractor pentru lead
+  const lead = {
+    clientNameText: '',
+    clientEmailText: '',
+    clientTelefonText: '',
+    clientWebsiteText: '',
+    mesajCatreClientText: output || ''
+  };
+
+  return lead;
 }
 
-module.exports = { genereazaLeadAI };
+module.exports = { genereazaLead };
