@@ -13,7 +13,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.json());
 
-// 🔄 Endpoint cronjob (în lucru sau fallback)
+// 🔄 Endpoint cronjob (în lucru)
 app.get('/firme-fara-lead', async (req, res) => {
   console.log('🔄 Pornit GET /firme-fara-lead');
   res.status(404).json({ error: 'Endpoint în curs de implementare' });
@@ -23,11 +23,10 @@ app.get('/firme-fara-lead', async (req, res) => {
 app.post('/genereaza', async (req, res) => {
   try {
     const firma = req.body.firma;
-
     console.log("📥 Firma primită:", firma);
 
-    // ✅ Validare corectă pe _id
-    if (!firma || !firma._id) {
+    const firmaId = firma?._id || firma?.firmaId;
+    if (!firma || !firmaId) {
       return res.status(400).json({ error: "Lipseste firmaId" });
     }
 
@@ -39,7 +38,7 @@ app.post('/genereaza', async (req, res) => {
     }
 
     // ✅ Salvare lead în Wix
-    const salvat = await salveazaLead(rezultat, firma._id);
+    const salvat = await salveazaLead(rezultat, firmaId);
 
     return res.json({ success: true, lead: salvat });
   } catch (e) {
