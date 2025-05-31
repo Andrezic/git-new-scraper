@@ -1,51 +1,52 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-require('dotenv').config();
-
-const { genereazaLeadAI } = require('./utils/openai'); // <-- corect
-const { getFirmaById } = require('./utils/wix-data');
-const { salveazaLeadNou } = require('./utils/wix-leads');
+const { genereazaLeadAI } = require('./openai');
+const { salveazaLeadNou } = require('./wix-leads');
+const { getFirmaById } = require('./wix-data');
 
 const app = express();
-const port = 3000;
-
 app.use(cors());
 app.use(bodyParser.json());
 
-app.post('/genereaza', async (req, res) => {
-  const { firmaId } = req.body;
-  console.log('🔧 POST /genereaza firmaId:', firmaId);
+const PORT = process.env.PORT || 3000;
 
+// 🔄 GET endpoint pentru debug (cronjob)
+app.get('/firme-fara-lead', async (req, res) => {
+  console.log('🔄 Pornit GET /firme-fara-lead');
+  res.status(404).json({ error: 'Endpoint în curs de implementare' });
+});
+
+// ✅ POST endpoint pentru generare lead
+app.post('/genereaza', async (req, res) => {
   try {
+    const { firmaId } = req.body;
+    if (!firmaId) return res.status(400).json({ error: 'Lipseste firmaId' });
+
     const firma = await getFirmaById(firmaId);
-    if (!firma || !firma.inputNumeFirma) {
-      return res.status(400).json({ error: 'Lipsesc datele firmei' });
-    }
+    if (!firma) return res.status(404).json({ error: 'Firma nu a fost gasita' });
 
     console.log('📥 Firma primită:', firma);
 
-    const leadPropus = {
-      clientNameText: 'Nume Client Test',
-      clientEmailText: 'client@exemplu.com',
-      clientTelefonText: '0712345678',
-      clientWebsiteText: 'https://www.exemplu.com'
-    };
+    const leadAI = await genereazaLeadAI(firma);
 
-    const rezultatAI = await genereazaLeadAI({ firmaUtilizator: firma, leadPropus }); // <-- corect
     const leadFinal = {
-      ...leadPropus,
-      mesajCatreClientText: rezultatAI.mesajFinal,
+      ...leadAI,
       firmaId: firma._id,
       status: 'trimis',
       dataText: new Date().toISOString()
     };
 
-    const rezultatSalvare = await salveazaLeadNou(leadFinal);
-    res.json({ mesaj: '✅ Lead generat', lead: rezultatSalvare });
+    await salveazaLeadNou(leadFinal);
 
-  } catch (error) {
-    console.error('❌ Eroare în /genereaza:', error.message);
+    console.log('✅ Lead generat și salvat:', leadFinal);
+    res.status(200).json({ success: true, lead: leadFinal });
+  } catch (err) {
+    console.error('❌ Eroare în /genereaza:', err);
     res.status(500).json({ error: 'Eroare server la generare lead' });
   }
+});
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server pornit pe portul ${PORT}`);
 });
