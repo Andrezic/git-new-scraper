@@ -1,55 +1,77 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const cors = require('cors');
 const dotenv = require('dotenv');
-const fs = require('fs');
-const path = require('path');
-const wixData = require('./utils/wix-data');
-const genereazaLeadAI = require('./utils/openai').genereazaLeadAI;
+const { importProfilFirme } = require('./utils/wix-data');
+const { genereazaLeadAI } = require('./utils/openai');
+const { salveazaLead } = require('./utils/salvare-lead');
+const { v4: uuidv4 } = require('uuid');
 
 dotenv.config();
-
 const app = express();
-const port = process.env.PORT || 3000;
-
-app.use(cors());
 app.use(bodyParser.json());
+
+const PORT = process.env.PORT || 3000;
+
+app.get('/', (req, res) => {
+  res.send('Skyward Flow server e activ 🚀');
+});
 
 app.post('/genereaza', async (req, res) => {
   try {
     const firma = req.body;
-    if (!firma || !firma.inputNumeFirma || !firma.inputEmailFirma) {
-      return res.status(400).json({ error: 'Lipsesc datele firmei' });
+    if (!firma || !firma.inputNumeFirma || !firma._id) {
+      console.error("❌ Lipsesc datele firmei:", firma);
+      return res.status(400).json({ error: 'Date firmă invalide' });
     }
 
     const rezultat = await genereazaLeadAI(firma);
-    if (!rezultat || rezultat.error) {
-      return res.status(400).json({ error: rezultat?.error || 'Eroare generare lead' });
+
+    if (!rezultat || !rezultat.clientNameText || !rezultat.clientEmailText || !rezultat.mesajCatreClientText) {
+      console.error("❌ Leadul generat nu e valid:", rezultat);
+      return res.status(400).json({ error: 'Lead invalid generat' });
     }
 
-    return res.status(200).json({ success: true, lead: rezultat });
+    const lead = {
+      _id: uuidv4(),
+      firmaId: firma._id,
+      ...rezultat,
+      status: 'nou',
+      dataText: new Date().toISOString()
+    };
+
+    await salveazaLead(lead);
+
+    console.log("✅ Lead salvat:", lead.clientNameText);
+    res.json({ success: true, lead });
   } catch (err) {
-    console.error("❌ Eroare generală în procesul de generare/salvare:", err);
-    return res.status(500).json({ error: 'Eroare internă server' });
+    console.error("❌ Eroare generală în procesul de generare/salvare:", err.message);
+    res.status(500).json({ error: 'Eroare internă' });
   }
 });
 
+// Endpoint nou pentru cronjob
 app.get('/firme-fara-lead', async (req, res) => {
   try {
-    const toateFirmele = await wixData.importProfilFirme();
-    const firmeFiltrate = toateFirmele.filter(firma =>
-      !firma.ultimaGenerare || firma.ultimaGenerare.trim() === ""
-    );
+    console.log("🔍 Caut firme fără lead generat recent...");
+    const firme = await importProfilFirme();
 
-    console.log(`🔎 Găsite ${firmeFiltrate.length} firme fără lead.`);
+    const firmeFaraLead = firme.filter((firma) => {
+      const last = firma.lastGenerated;
+      if (!last) return true;
 
-    res.status(200).json({ firme: firmeFiltrate });
+      const lastDate = new Date(last);
+      const diffMinutes = (Date.now() - lastDate.getTime()) / (1000 * 60);
+      return diffMinutes >= 5;
+    });
+
+    console.log(`📦 ${firmeFaraLead.length} firme fără lead recent`);
+    res.json({ firme: firmeFaraLead });
   } catch (err) {
-    console.error("❌ Eroare la /firme-fara-lead:", err);
-    res.status(500).json({ error: 'Eroare internă în extragerea firmelor' });
+    console.error("❌ Eroare la /firme-fara-lead:", err.message);
+    res.status(500).json({ error: 'Eroare internă la /firme-fara-lead' });
   }
 });
 
-app.listen(port, () => {
-  console.log(`🚀 Serverul rulează la http://localhost:${port}`);
+app.listen(PORT, () => {
+  console.log(`🚀 Serverul rulează pe portul ${PORT}`);
 });
