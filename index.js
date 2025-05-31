@@ -49,3 +49,17 @@ app.post('/genereaza', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Serverul rulează pe portul ${PORT}`);
 });
+
+app.get('/firme-fara-lead', async (req, res) => {
+  try {
+    const { data } = await axios.get('https://www.skywardflow.com/_functions/formulare');
+    const toateFirmele = data.firme || [];
+
+    const faraLead = toateFirmele.filter(f => !f.ultimaGenerare || f.ultimaGenerare === "");
+    res.status(200).json({ firme: faraLead });
+  } catch (err) {
+    console.error("❌ Eroare la verificare firme fără lead:", err.message);
+    res.status(500).json({ error: 'Eroare la extragere firme' });
+  }
+});
+
