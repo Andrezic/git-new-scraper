@@ -32,9 +32,11 @@ app.post('/genereaza', async (req, res) => {
 
     console.log('📥 Firma primită:', firma);
 
-    const lead = await genereazaLeadAI(firma); // ✅ Funcția există acum
-    console.log('🧠 Lead returnat de AI:', lead);
-    console.log('✅ folosesc genereazaLeadAI')
+    console.log('📦 Firma trimisă la AI:', JSON.stringify(firma, null, 2));
+
+    const lead = await genereazaLeadAI(firma);
+
+    console.log('🧠 Lead returnat de AI:', JSON.stringify(lead, null, 2));
 
     if (!lead || !lead.clientNameText || !lead.clientEmailText || !lead.mesajCatreClientText) {
       return res.status(500).json({ error: 'Lead generat incomplet sau invalid' });
