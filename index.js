@@ -33,6 +33,7 @@ app.post('/genereaza', async (req, res) => {
     console.log('📥 Firma primită:', firma);
 
     const lead = await genereazaLeadAI(firma); // ✅ Funcția există acum
+    console.log('🧠 Lead returnat de AI:', lead);
     console.log('✅ folosesc genereazaLeadAI')
 
     if (!lead || !lead.clientNameText || !lead.clientEmailText || !lead.mesajCatreClientText) {
