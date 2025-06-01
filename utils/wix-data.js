@@ -1,8 +1,7 @@
 // utils/wix-data.js
-
 const axios = require('axios');
 
-// Funcție pentru a obține firmele fără lead
+// Obține toate firmele fără lead
 async function getFirmeFaraLead() {
   try {
     const response = await axios.get('https://www.skywardflow.com/_functions/firme-fara-lead');
@@ -13,7 +12,7 @@ async function getFirmeFaraLead() {
   }
 }
 
-// Funcție pentru a obține firma după ID
+// Obține datele unei firme după ID
 async function getFirmaById(firmaId) {
   try {
     const response = await axios.get(`https://www.skywardflow.com/_functions/firma?firmaId=${firmaId}`);
@@ -24,6 +23,7 @@ async function getFirmaById(firmaId) {
   }
 }
 
+// ✅ Export corect
 module.exports = {
   getFirmeFaraLead,
   getFirmaById

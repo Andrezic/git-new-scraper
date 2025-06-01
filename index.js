@@ -24,7 +24,7 @@ app.get('/firme-fara-lead', async (req, res) => {
 
 app.post('/genereaza', async (req, res) => {
   try {
-    const firma = req.body.firma;
+    const firma = req.body.firma || req.body.firmaUtilizator;
 
     if (!firma || !firma.firmaId) {
       return res.status(400).json({ error: 'Lipseste firmaId' });
