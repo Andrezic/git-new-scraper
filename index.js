@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const { getFirmeFaraLead, getFirmaById } = require('./utils/wix-data');
 const { salveazaLead } = require('./utils/wix-leads');
-const { genereazaLead } = require('./utils/openai'); // ✅ IMPORT CORECT
+const { genereazaLeadAI } = require('./utils/openai'); // ✅ IMPORT CORECT
 require('dotenv').config();
 
 const app = express();
@@ -32,7 +32,7 @@ app.post('/genereaza', async (req, res) => {
 
     console.log('📥 Firma primită:', firma);
 
-    const lead = await genereazaLead(firma); // ✅ Funcția există acum
+    const lead = await genereazaLeadAI(firma); // ✅ Funcția există acum
 
     if (!lead || !lead.clientNameText || !lead.clientEmailText || !lead.mesajCatreClientText) {
       return res.status(500).json({ error: 'Lead generat incomplet sau invalid' });
