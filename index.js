@@ -48,9 +48,10 @@ app.post('/genereaza', async (req, res) => {
 
     res.status(200).json({ mesaj: 'Lead generat cu succes', lead });
   } catch (error) {
-    console.error('❌ Eroare server la /genereaza:', error);
-    res.status(500).json({ error: 'Eroare server la generare lead' });
+    console.error('❌ Eroare server la /genereaza:', error.message);
+    res.status(500).json({ error: error.message });
   }
+
 });
 
 app.listen(PORT, () => {
