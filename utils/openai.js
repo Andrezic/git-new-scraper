@@ -12,24 +12,29 @@ const coduriCaen = fs.readFileSync(path.join(__dirname, '../coduri_CAEN_b2b_deta
 
 // ✅ Funcție principală exportată corect
 async function genereazaLeadAI(firma) {
-  const mesajUtilizator = `
-📦 Firma: ${firma.inputNumeFirma}
-🌐 Website: ${firma.inputWebsiteFirma}
-📧 Email: ${firma.inputEmailFirma}
-📞 Telefon: ${firma.inputTelefonFirma}
-🛠️ Servicii: ${firma.inputServicii}
-💡 Avantaje: ${firma.inputAvantaje}
-💰 Preturi: ${firma.inputPreturi}
-🧩 Tip client dorit: ${firma.inputTipClienti}
-🏢 Dimensiune client: ${firma.inputDimensiuneClient}
-📍 Zona target: ${firma.inputTintireGeo?.formatted || ''}
-🗺️ Localizare firma: ${firma.inputLocalizare?.formatted || ''}
-🔍 Cuvinte cheie: ${firma.inputKeywords}
-📜 Descriere: ${firma.inputDescriere}
-📗 Cod CAEN: ${firma.inputCodCaen}
-🧠 Context coduri CAEN:
+const mesajUtilizator = `
+Te rog răspunde pe exact 5 linii, fiecare pe rând:
+
+1. Numele clientului compatibil
+2. Emailul clientului
+3. Telefon client (dacă există)
+4. Website client (dacă există)
+5. Mesajul care va fi trimis de firmă către client
+
+Date firmă:
+Nume firmă: ${firma.inputNumeFirma}
+Website: ${firma.inputWebsiteFirma}
+Email: ${firma.inputEmailFirma}
+Telefon: ${firma.inputTelefonFirma}
+Servicii: ${firma.inputServicii}
+Avantaje: ${firma.inputAvantaje}
+Prețuri: ${firma.inputPreturi}
+Tip client dorit: ${firma.inputTipClienti}
+Cod CAEN: ${firma.inputCodCaen}
+
+Coduri CAEN disponibile:
 ${coduriCaen}
-  `;
+`;
 
   const raspuns = await openai.chat.completions.create({
     model: 'gpt-4o',
