@@ -38,7 +38,7 @@ app.post('/genereaza', async (req, res) => {
       return res.status(500).json({ error: 'Lead generat incomplet sau invalid' });
     }
 
-    const salvat = await salveazaLead(firma.firmaId, lead);
+    const salvat = await salveazaLead(lead, firma.firmaId);
 
     console.log('✅ Lead generat și salvat:', salvat);
 
