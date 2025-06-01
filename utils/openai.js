@@ -29,7 +29,7 @@ async function genereazaLeadAI(firma) {
 📗 Cod CAEN: ${firma.inputCodCaen}
 🧠 Context coduri CAEN:
 ${coduriCaen}
-`;
+  `;
 
   const raspuns = await openai.chat.completions.create({
     model: 'gpt-4o',
@@ -41,7 +41,13 @@ ${coduriCaen}
   });
 
   const rezultat = raspuns.choices?.[0]?.message?.content || '';
-  const [clientNameText, clientEmailText, clientTelefonText, clientWebsiteText, mesajCatreClientText] = rezultat.split('\n').map(line => line.trim());
+  const linii = rezultat.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+
+  const clientNameText = linii[0] || '';
+  const clientEmailText = linii[1] || '';
+  const clientTelefonText = linii[2] || '';
+  const clientWebsiteText = linii[3] || '';
+  const mesajCatreClientText = linii.slice(4).join('\n');
 
   return {
     clientNameText,
